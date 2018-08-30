@@ -34,8 +34,8 @@ System.config({
       "core/choice-session.js",
       "core/fileops.js",
       "core/jquery/jquery.tmpl.js",
-      "npm:jquery.terminal@1.18.0.js",
-      "npm:jquery.terminal@1.18.0/js/jquery.terminal.js",
+      "npm:jquery.terminal@1.21.0.js",
+      "npm:jquery.terminal@1.21.0/js/jquery.terminal.js",
       "github:jspm/nodelibs-process@0.1.2.js",
       "github:jspm/nodelibs-process@0.1.2/index.js",
       "npm:process@0.11.10.js",
@@ -110,7 +110,7 @@ System.config({
     "jquery-easyui": "npm:jquery-easyui@1.5.21",
     "jquery-mousewheel": "npm:jquery-mousewheel@3.1.13",
     "jquery-ui": "github:components/jqueryui@1.12.1",
-    "jquery.terminal": "npm:jquery.terminal@1.18.0",
+    "jquery.terminal": "npm:jquery.terminal@1.21.0",
     "newlogging": "/fschoice/newlogging/scripts",
     "github:components/jqueryui@1.12.1": {
       "jquery": "npm:jquery@3.3.1"
@@ -146,6 +146,14 @@ System.config({
       "base64-js": "npm:base64-js@1.3.0",
       "ieee754": "npm:ieee754@1.1.12"
     },
+    "npm:clipboard@2.0.1": {
+      "good-listener": "npm:good-listener@1.2.2",
+      "path": "github:jspm/nodelibs-path@0.1.0",
+      "process": "github:jspm/nodelibs-process@0.1.2",
+      "select": "npm:select@1.1.2",
+      "systemjs-json": "github:systemjs/plugin-json@0.1.2",
+      "tiny-emitter": "npm:tiny-emitter@2.0.2"
+    },
     "npm:clone@1.0.4": {
       "buffer": "github:jspm/nodelibs-buffer@0.1.1"
     },
@@ -176,6 +184,9 @@ System.config({
     "npm:defaults@1.0.3": {
       "clone": "npm:clone@1.0.4"
     },
+    "npm:good-listener@1.2.2": {
+      "delegate": "npm:delegate@3.2.0"
+    },
     "npm:inherits@2.0.1": {
       "util": "github:jspm/nodelibs-util@0.1.0"
     },
@@ -185,13 +196,17 @@ System.config({
     "npm:jquery-mousewheel@3.1.13": {
       "jquery": "npm:jquery@3.3.1"
     },
-    "npm:jquery.terminal@1.18.0": {
+    "npm:jquery.terminal@1.21.0": {
       "jquery": "npm:jquery@3.3.1",
+      "prismjs": "npm:prismjs@1.15.0",
       "process": "github:jspm/nodelibs-process@0.1.2",
       "wcwidth": "npm:wcwidth@1.0.1"
     },
     "npm:path-browserify@0.0.0": {
       "process": "github:jspm/nodelibs-process@0.1.2"
+    },
+    "npm:prismjs@1.15.0": {
+      "clipboard": "npm:clipboard@2.0.1"
     },
     "npm:process@0.11.10": {
       "assert": "github:jspm/nodelibs-assert@0.1.0",
