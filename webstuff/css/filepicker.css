@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+}
+#outer {
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+#top {
+    padding: 2px 8px;
+    border: solid 1px;
+    background-color: aquamarine;
+}
+#menubar {
+    height: 24px;
+    padding: 2px;
+    background-color: #252161;
+}
+#content {
+    margin-left: 8px;
+    margin-right: 8px;
+    margin-bottom: 8px;
+    margin-top: 0;
+    position: relative;
+}
+#bottom {
+    border-top: 1px solid;
+    /*bottom: 0;*/
+    /*position: fixed;*/
+    /*width: 100%;*/
+}
+.topbutton {
+    padding: 14px 0px;
+    /*float: left;*/
+}
+.toptext {
+    /*float: left;*/
+    margin: 18px 4px;
+}
+span {
+    margin-left: auto;
+    margin-right: auto;
+}

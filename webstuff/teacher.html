@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Teacher Account Manager</title>
+    <link rel="stylesheet" href="/library/mdl/1.3.0/material.min.css">
+    <script src="/library/mdl/1.3.0/material.min.js"></script>
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.teal-indigo.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="jspm_packages/github/components/jqueryui@1.12.1/themes/cupertino/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="jspm_packages/npm/datatables.net-dt@1.10.16/css/jquery.dataTables.css">
+    <style type="text/css">
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript" src="jspm_packages/system.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript">
+        System.import('js/teacher.js');
+    </script>
+</head>
+<body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base">
+<div class="mdl-layout mdl-js-layout mdl-layout--fixed-header" id="main">
+    <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+        <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">Teacher Account Manager</span>
+            <nav class="mdl-navigation" style="margin-left:50px;">
+                <a id="goPending" class="mdl-navigation__link" href="">Pending Requests</a>
+                <a id="goExisting" class="mdl-navigation__link" href="">Existing Accounts</a>
+            </nav>
+        </div>
+    </header>
+    <main class="mdl-layout__content" style="padding-left:50px;overflow-x:visible">
+        <div id="statusMsg" style="margin-top:20px;margin-bottom:-30px;margin-left:50px;">Loading</div>
+        <div id="status" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="margin:50px;">
+        </div>
+        <div id="pending" class="hidden">
+            <h5>Pending Requests for Teacher Accounts</h5>
+            <table id="table1" class="mdl-data-table mdl-js-data-table">
+                <thead>
+                <tr>
+                    <th class="mdl-data-table__cell--non-numeric">Email Address</th>
+                    <th class="mdl-data-table__cell--non-numeric">Teacher Name</th>
+                    <th>Years Teaching</th>
+                    <th class="mdl-data-table__cell--non-numeric">School Name</th>
+                    <th class="mdl-data-table__cell--non-numeric">City</th>
+                    <th class="mdl-data-table__cell--non-numeric">State</th>
+                    <th>Zipcode</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+            <div style="font-size: smaller;">* - email address not confirmed</div>
+            <div style="font-size: smaller;">G - email address from Google</div>
+            <div id="teacherPanel" class="hidden" style="margin-top:20px;">
+                <h5><span class="teacherName"></span> &lt;<span class="teacherEmail"></span>&gt; says:</h5>
+                <pre></pre>
+            </div>
+        </div>
+        <div id="action" class="hidden" style="margin-top:30px;">
+            <div id="alayout">
+                <div id="anorth">
+                    <button id="approve" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                        Set To Approve
+                    </button>
+                    <button id="deny" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                        Set To Deny
+                    </button>
+                    <h5>Message for <span class="teacherName"></span> &lt;<span class="teacherEmail"></span>&gt;:</h5>
+                </div>
+                <div id="acenter">
+                    <textarea rows=15 cols=72 wrap="hard" placeholder="Text of email to be sent to teacher."></textarea>
+                </div>
+                <div id="asouth" style="margin-top:20px;">
+                    <button id="acancel" class="mdl-button mdl-js-button mdl-button--raised mdl-button--colored">
+                        Take No Action
+                    </button>
+                    <button id="send" class="hidden mdl-button mdl-js-button mdl-button--raised mdl-button--colored mdl-button--accent">
+                        <span id="aname"></span> Account and Send Email
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="existing" class="hidden" style="margin-top:30px;">
+            <h5>Existing Teacher Accounts</h5>
+            <table id="table2" class="mdl-data-table mdl-js-data-table">
+                <thead>
+                <tr>
+                    <th class="mdl-data-table__cell--non-numeric">Id String</th>
+                    <th class="mdl-data-table__cell--non-numeric">Email Address</th>
+                    <th class="mdl-data-table__cell--non-numeric">Teacher Name</th>
+                    <th>Years Teaching</th>
+                    <th class="mdl-data-table__cell--non-numeric">School Name</th>
+                    <th class="mdl-data-table__cell--non-numeric">City</th>
+                    <th class="mdl-data-table__cell--non-numeric">State</th>
+                    <th>Zipcode</th>
+                </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        <dialog id="unconfirmedDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title"><i class="material-icons">warning</i>Unconfirmed Email Address</h4>
+            <div class="mdl-dialog__content">
+                <p>
+                    The teacher has not yet confirmed their email address.
+                    Please wait until they do.
+                </p>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="mdl-button close">Close</button>
+            </div>
+        </dialog>
+        <dialog id="approveDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title">Overwrite current message?</h4>
+            <div class="mdl-dialog__content">
+                <p>
+                    You are indicating your intent to approve this request. Do you want
+                    the existing message to be replaced with a canned approval message?
+                    You can continue to edit the message if it is replaced.
+                </p>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="mdl-button replace">Yes, Replace Message</button>
+                <button type="button" class="mdl-button leave">No, Leave Message</button>
+            </div>
+        </dialog>
+        <dialog id="denyDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title">Replace current message?</h4>
+            <div class="mdl-dialog__content">
+                <p>
+                    You are indicating your intent to deny this request. Do you want
+                    the existing message to be replaced with a canned denial message?
+                    You can continue to edit the message if it is replaced.
+                </p>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="mdl-button replace">Yes, Replace Message</button>
+                <button type="button" class="mdl-button leave">No, Leave Message</button>
+            </div>
+        </dialog>
+        <dialog id="errorDialog" class="mdl-dialog">
+            <h4 class="mdl-dialog__title">Server Error</h4>
+            <div class="mdl-dialog__content">
+                <p></p>
+            </div>
+            <div class="mdl-dialog__actions">
+                <button type="button" class="mdl-button close">Close</button>
+            </div>
+        </dialog>
+    </main>
+</div>
+<div id="posterlet"  class="mdl-layout mdl-js-layout mdl-layout--fixed-header hidden">
+    <header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+        <div class="mdl-layout__drawer-button" id="pback"><i class="material-icons">arrow_back</i></div>
+<!--
+        <button class="mdl-layout-icon mdl-button mdl-js-button mdl-button&#45;&#45;icon" id="pback">
+            <i class="material-icons">arrow_back</i>
+        </button>
+-->
+        <div class="mdl-layout__header-row">
+            <span class="mdl-layout-title">Posterlet Data For <span class="teacherName"></span></span>
+        </div>
+    </header>
+    <main class="mdl-layout__content" style="padding-left:50px;padding-right:50px;overflow-x:visible">
+        <div id="pstatus"></div>
+        <p>Table of Posterlet users, past and present.</p>
+        <div id="ptable"></div>
+    </main>
+</div>
+</body>
+</html>

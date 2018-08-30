@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Terminal</title>
+    <!--<link rel="stylesheet" type="text/css" href="/library/jquery-terminal/0.10.12/jquery.terminal.css">-->
+    <link rel="stylesheet" type="text/css" href="../jspm_packages/npm/jquery.terminal@1.18.0/css/jquery.terminal.min.css">
+    <!--<script type="text/javascript" src="/library/requirejs/2.2.0/require.js"></script>-->
+    <style type="text/css" media="screen">
+        #term {
+            position: absolute;
+            overflow: auto;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: black;
+            color: white;
+        }
+        .ttable {
+            font-size: 12pt;
+            border-style: ridge;
+            border-collapse: collapse;
+        }
+        .ttable tr th,td {
+            padding: 6px;
+            border-width: 1px;
+            border-style: solid;
+        }
+    </style>
+    <script type="text/javascript" src="../jspm_packages/system.js"></script>
+    <script type="text/javascript">
+        SystemJS.config({ baseURL: '..' });
+    </script>
+    <script type="text/javascript" src="../config.js"></script>
+    <script type="text/javascript">
+        SystemJS.config({
+            meta: {
+                'core/choice-session': {
+                    format: 'amd',
+                    deps: ['jquery']
+                },
+                'core/fileops': {
+                    format: 'amd',
+                    deps: ['core/choice-session']
+                },
+                'core/groups': {
+                    format: 'amd',
+                    deps: ['core/choice-session']
+                },
+                'core/ifmessage': {
+                    format: 'amd',
+                    deps: ['jquery']
+                },
+                'core/table': {
+                    format: 'global',
+                    exports: 'Table'
+                },
+                'core/jquery/jquery.tmpl': {
+                    format: 'global',
+                    deps: ['jquery']
+                },
+                'terminal/term': {
+                    format: 'esm',
+                    deps: [
+                        'core/jquery/jquery.tmpl',
+                        'core/choice-session',
+                        'core/fileops',
+                        'core/groups',
+                        'core/table'
+                    ]
+                }
+            }
+        });
+        SystemJS.import('terminal/term').then(function(term) {
+            $(new term.default());
+        }).catch(function(error) { console.log(error); });
+    </script>
+</head>
+<body>
+    <div id="term"></div>
+    <script id="cmdListUsers" type="text/x-jquery-tmpl">
+        <div class="wizpage ui-widget ui-widget-content">
+            <table id="${tableId}" class="ui-widget usertable" frame="box" rules="all">
+                <caption>${users.length} ${hdr} <span style="white-space: pre;">${gname}</span></caption>
+                <thead>
+                    <tr>
+                    {{each(k, f) fields}}
+                    <th>${f.header}</th>
+                    {{/each}}
+                    {{each(k, attr) attrs}}
+                    <th>${attr}</th>
+                    {{/each}}
+                    </tr>
+                </thead>
+                <tbody>
+                    {{each(i, user) users}}
+                    <tr>
+                    {{each(j, f) fields}}
+                    {{if (f.field === 'email' && user[f.field])}}
+                      <td><a href="mailto:${user[f.field]}">${user[f.field]}</a></td>
+                    {{else}}
+                      <td>${user[f.field]}</td>
+                    {{/if}}
+                    {{/each}}
+                    {{each(j, attr) attrs}}
+                    <td>${user[attr]}</td>
+                    {{/each}}
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </script>
+    <script id="cmdListGroups" type="text/x-jquery-tmpl">
+        <div class="wizpage ui-widget ui-widget-content">
+            <table id="usertable" class="ui-widget" frame="box" rules="all">
+                <caption>${hdr}</caption>
+                <thead>
+                    <tr><th>Id</th><th>Name</th>
+                    <th>Login</th><th>Sign-up</th>
+                    <th>Description</th><th>Path(s)</th></tr>
+                </thead>
+                <tbody>
+                    {{each groups}}
+                    <tr>
+                        <td>${id}</td>
+                        <td>${name}</td>
+                        <td>${(login) ? "yes" : "no"}</td>
+                        <td>${(signup) ? "yes" : "no"}</td>
+                        <td>${desc}</td>
+                        <td>
+                        {{each(i, path) paths}}
+                        <div>${path}</div>
+                        {{/each}}
+                        </td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </script>
+    <script id="cmdPPList" type="text/x-jquery-tmpl">
+        <div>
+            <table class="ttable">
+                <caption>${hdr}</caption>
+                <thead>
+                    <tr><th>Id</th><th>Policy</th>
+                    <th>Principal</th><th>Type</th>
+                    <th>Pattern</th></tr>
+                </thead>
+                <tbody>
+                    {{each pplist}}
+                    <tr>
+                        <td>${id}</td>
+                        <td>${policy.path}</td>
+                        <td>${principal.path}</td>
+                        <td>${ptype}</td>
+                        <td>${pattern}</td>
+                    </tr>
+                    {{/each}}
+                </tbody>
+            </table>
+        </div>
+    </script>
+<!--
+    <script>
+        var root = (window.location.pathname.lastIndexOf('/fschoice', 0) === 0) ? '/fschoice/' : '/';
+        requirejs.config({
+            paths: {
+                // jquery: root + 'library/jquery/3.0.0/jquery-3.0.0.min',
+                jquery: 'jspm_packages/npm/jquery@3.3.1/dist/jquery.min',
+                jqplugin: root + 'scripts/jquery',
+                // jqterm: root + 'library/jquery-terminal/0.10.12/jquery.terminal.min',
+                jqterm: 'jspm_packages/npm/jquery.terminal@1.12.1',
+                // process: 'jspm_packages/npm/process@0.11.10',
+                fsdesktop: 'js',
+                core: root + 'scripts'
+            },
+            shim: {
+                jqterm: {
+                    // deps: ['jquery', root + 'library/jquery-terminal/0.10.12/jquery.mousewheel-min.js']
+                    deps: ['jquery', 'jspm_packages/npm/jquery.terminal@1.12.1/js/jquery.mousewheel-min']
+                }
+            }
+        });
+        require(['jquery'], function(jq) {
+            jQuery = jq;
+            /* require(['jqplugin/jquery-migrate-1.2.1'], function (jqmig) { */
+                require(['jqterm', 'fsdesktop/term'], function (jqt, fst) {
+                    console.log('term loaded');
+                });
+            /* }); */
+        });
+    </script>
+-->
+</body>
+</html>

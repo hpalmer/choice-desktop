@@ -1,0 +1,18 @@
+{
+  "jspm": {
+    "dependencies": {
+      "ace": "github:ajaxorg/ace-builds@^1.4.1",
+      "components/jqueryui": "github:components/jqueryui@^1.12.1",
+      "datatables.net": "npm:datatables.net@^1.10.15",
+      "datatables.net-dt": "npm:datatables.net-dt@^1.10.15",
+      "datatables.net-responsive": "npm:datatables.net-responsive@^2.2.0",
+      "datatables.net-responsive-dt": "npm:datatables.net-responsive-dt@^2.2.0",
+      "jquery-easyui": "npm:jquery-easyui@1.5.21"
+    },
+    "devDependencies": {
+      "babel": "npm:babel-core@^5.8.24",
+      "babel-runtime": "npm:babel-runtime@^5.8.24",
+      "core-js": "npm:core-js@^1.1.4"
+    }
+  }
+}

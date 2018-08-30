@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Choicelet Playback Tool</title>
+    <link rel="stylesheet" href="/library/mdl/1.3.0/material.min.css">
+    <link rel="stylesheet" href="/library/mdl/mdl-select/getmdl-select.min.css">
+    <script src="/library/mdl/1.3.0/material.min.js"></script>
+    <script src="/library/mdl/mdl-select/getmdl-select.min.js"></script>
+    <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.teal-indigo.min.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="jspm_packages/github/components/jqueryui@1.12.1/themes/cupertino/jquery-ui.css">
+    <link rel="stylesheet" type="text/css" href="jspm_packages/npm/datatables.net-dt@1.10.16/css/jquery.dataTables.css">
+    <link rel="stylesheet" type="text/css" href="jspm_packages/npm/datatables.net-responsive-dt@2.2.0/css/responsive.dataTables.css">
+    <style type="text/css">
+        .hidden {
+            display: none;
+        }
+    </style>
+    <script type="text/javascript" src="jspm_packages/system.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript">
+        System.import('js/playback.js');
+    </script>
+</head>
+<body class="mdl-demo mdl-color--grey-100 mdl-color-text--grey-700 mdl-base mdl-layout--fixed-header">
+<header class="mdl-layout__header mdl-layout__header--scroll mdl-color--primary">
+    <div class="mdl-layout__header-row">
+        <span class="mdl-layout-title">Choicelet Playback Tool</span>
+        <nav class="mdl-navigation" style="margin-left:50px;">
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fix-height">
+                <input class="mdl-textfield__input" type="text" id="choicelet" value="Choose Choicelet" readonly tabIndex="-1">
+                <label for="choicelet">
+                    <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                </label>
+                <label for="choicelet" class="mdl-textfield__label">Choose Choicelet</label>
+                <ul for="choicelet" class="mdl-menu mdl-menu--bottom-left mdl-js-menu" id="choiceletlist">
+                    <li class="mdl-menu__item dummy-item" data-val="NONE">Choose Choicelet</li>
+                </ul>
+            </div>
+            <div class="mdl-textfield mdl-js-textfield mdl-textfield--floating-label getmdl-select getmdl-select__fix-height">
+                <input class="mdl-textfield__input" type="text" id="version" value="Choose Version" readonly tabIndex="-1">
+                <label for="version">
+                    <i class="mdl-icon-toggle__label material-icons">keyboard_arrow_down</i>
+                </label>
+                <label for="version" class="mdl-textfield__label">Choose Version</label>
+                <ul for="version" class="mdl-menu mdl-menu--bottom-left mdl-js-menu" id="versionlist">
+                    <li class="mdl-menu__item dummy-item" data-val="NONE">Choose Version</li>
+                </ul>
+            </div>
+        </nav>
+    </div>
+</header>
+<main class="mdl-layout__content" style="padding-left:50px;overflow-x:visible">
+    <div id="statusMsg" style="margin-top:20px;margin-bottom:-30px;margin-left:50px;">Loading Choicelet information...</div>
+    <div id="status" class="mdl-progress mdl-js-progress mdl-progress__indeterminate" style="margin:50px;">
+    </div>
+    <div id="sessionlist" class="hidden">
+        <h5>Sessions for</h5>
+        <table id="table1" class="mdl-data-table mdl-js-data-table">
+            <thead>
+            <tr data-index="-1">
+                <th>#</th>
+                <th>State Id</th>
+                <th class="mdl-data-table__cell--non-numeric">Group</th>
+                <th class="mdl-data-table__cell--non-numeric">User</th>
+                <th class="mdl-data-table__cell--non-numeric">Date/Time</th>
+                <th class="mdl-data-table__cell--non-numeric">Duration</th>
+                <th class="mdl-data-table__cell--non-numeric">Closed</th>
+            </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</main>
+</body>
+</html>

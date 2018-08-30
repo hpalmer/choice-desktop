@@ -1,0 +1,316 @@
+body {
+    background-color: #252161;
+    overflow: hidden;
+    margin: 0;
+}
+.transparent {
+    opacity: 0;
+}
+.dthide {
+    opacity: 0;
+    z-index: -50;
+}
+#desktop {
+    position: fixed;
+    margin: 0;
+    padding: 0;
+    border-width: 0;
+    top: 26px;              /* height of menubar */
+    width: 100%;
+    height: 100%;
+    background: url("../images/landscapes_tardis_doctor_who_1_1920x1080_wallpaperno.com.jpg") no-repeat fixed;
+    background-size: cover;
+    transition: opacity 5s ease-in-out 1s;
+    -webkit-transition: opacity 5s ease-in-out 1s;
+    -moz-transition: opacity 5s ease-in-out 1s;
+    -o-transition: opacity 5s ease-in-out 1s;
+}
+#mousecatcher {
+    position: absolute;
+    opacity: 0;
+    top: 24px;              /* height of menubar */
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+.window {
+    display: block;
+    position: absolute;
+    overflow: hidden;
+    padding: 5px;
+    border: 1px solid #95B8E7;
+    -moz-border-radius: 5px 5px 5px 5px;
+    -webkit-border-radius: 5px 5px 5px 5px;
+    border-radius: 5px 5px 5px 5px;
+    background-color: #E0ECFF;
+    background: -webkit-linear-gradient(top,#EFF5FF 0,#E0ECFF 20%);
+    background: -moz-linear-gradient(top,#EFF5FF 0,#E0ECFF 20%);
+    background: -o-linear-gradient(top,#EFF5FF 0,#E0ECFF 20%);
+    background: linear-gradient(to bottom,#EFF5FF 0,#E0ECFF 20%);
+    background-repeat: repeat-x;
+    filter: progid:DXImageTransform.Microsoft.gradient(startColorstr=#EFF5FF,endColorstr=#E0ECFF,GradientType=0);
+}
+.winhdr {
+    display: block;
+    position: relative;
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    padding: 0 0 6px 0;
+    background: transparent;
+    height: 16px;
+}
+.wintitle {
+    float: left;
+    font-size: 12px;
+    font-weight: bold;
+    color: #0E2D5F;
+    height: 16px;
+    line-height: 16px;
+    text-align: left;
+    margin-right: 20px;
+}
+.wincontrols {
+    float: right;
+    height: 16px;
+}
+.winrestore, .winmax, .winclose {
+    display: inline-block;
+    height: 16px;
+}
+.winmax {
+    width: 24px;
+    background-image: url("../images/maximize.png");
+}
+.winrestore {
+    width: 24px;
+    background-image: url("../images/restore.png");
+}
+.winclose {
+    width: 30px;
+    background-image: url("../images/close_outline.png");
+}
+.winclose:hover {
+    background-image: url("../images/close_hover.png");
+}
+.winframe {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+.winframe > iframe {
+    border: 0;
+    margin: 0;
+    padding: 0;
+}
+.sizesmall {
+    -webkit-transform: scale(.05, .05);
+    -moz-transform: scale(.05, .05);
+    -o-transform: scale(.05, .05);
+    transform: scale(.05, .05);
+    opacity: 0.1;
+}
+.sizelarge {
+    -webkit-transform: scale(5, 5);
+    -moz-transform: scale(5, 5);
+    -o-transform: scale(5, 5);
+    transform: scale(5, 5);
+    opacity: 0;
+}
+.hidden {
+    width: 0;
+    height: 0;
+}
+#bgimage {
+    display: block;
+    /*width: auto;
+    height: 100%;*/
+    margin-left: auto;
+    margin-right: auto;
+    border-style: none;
+    transition: transform 3s ease-in-out 0s, opacity 3s ease-in-out 0s;
+    -webkit-transition: -webkit-transform 3s ease-in-out 0s, opacity 3s ease-in-out 0s;
+    -moz-transition: -moz-transform 3s ease-in-out 0s, opacity 3s ease-in-out 0s;
+    -o-transition: -o-transform 3s ease-in-out 0s, opacity 3s ease-in-out 0s;
+    -webkit-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;
+}
+#dtimage {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    transition: opacity 5s ease-in-out 1s;
+    -webkit-transition: opacity 5s ease-in-out 1s;
+    -moz-transition: opacity 5s ease-in-out 1s;
+    -o-transition: opacity 5s ease-in-out 1s;
+    -webkit-user-select: none;-moz-user-select: none;-ms-user-select: none;user-select: none;
+}
+.popupform {
+    background-color: lightyellow;
+    display: block;
+    z-index: 2;
+    opacity: .90;
+    border-style: ridge;
+    border-width: 5px;
+    border-color: darkred;
+    padding: 15px;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -khtml-border-radius: 10px;
+    border-radius: 10px;
+    font-size: 14pt;
+}
+#loginform {
+    position: absolute;
+    bottom: 10%;
+    left: 50%;
+}
+#cancelbtn {
+    margin-right: 10px;
+}
+#pwd {
+    margin-bottom: 10px;
+}
+#userid, #pwd {
+    width: 14em;
+    height: 1.5em;
+}
+area, map {
+    /* display: block; */
+    cursor: pointer;
+}
+.loginbox {
+    border-style: solid;
+    -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
+    -khtml-border-radius: 10px;
+    border-radius: 10px;
+    display: block;
+    z-index: 1;
+}
+.formboxhdr {
+    /*font-size: 110%;*/
+    font-weight: bold;
+    padding-bottom: 1.0em;
+    padding-top: 1.0em;
+    text-align: center;
+    clear: both;
+}
+.loginrowtop {
+    display: block;
+    clear: both;
+    overflow: hidden;
+}
+
+.loginrow {
+    clear: right;
+    font-weight: bold;
+    padding-top: 5px;
+    text-align: center;
+    float: right;
+    display: inline-block;
+}
+#regform {
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 30%;
+}
+#reghdr {
+    /*font-size: 110%;*/
+    font-weight: bold;
+    padding-bottom: 1.0em;
+    padding-top: 1.0em;
+    text-align: center;
+    clear: both;
+}
+.regpage {
+    display: none;
+    font-size: smaller;
+}
+#captcha_hdr {
+    float: left;
+    clear: right;
+    padding-top: 20px;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+#regNextButton, #regBackButton {
+    float: right;
+    margin: 15px;
+}
+#reginputs {
+    /*float: left;*/
+    /*width: 50%;*/
+}
+#reghelp {
+    /*float: right;*/
+    /*width: 40%;*/
+}
+#regstatus {
+    float: left;
+    clear: both;
+    font-size: smaller;
+}
+#regbuttons {
+    float: right;
+}
+.reghelp {
+    font-weight: bold;
+}
+.regerror {
+    display: none;
+    font-weight: bold;
+    color: red;
+}
+.flabel {
+    float: left;
+    text-align: right;
+    padding-right: 1em;
+    line-height: 1.5em;
+}
+.loginlink {
+    text-align: center;
+    font-weight: normal;
+    float: none;
+    clear: both;
+}
+.dtwindow {
+    position: absolute;
+    border: solid 1px;
+    background-color: blue;
+    top: 100px;
+    left: 100px;
+    width: 600px;
+    height: 400px;
+    margin: 0;
+    padding: 0;
+    cursor: default;
+}
+.dtwindow iframe {
+    position: absolute;
+    background-color: white;
+    border: none;
+    margin: 0;
+    padding: 0;
+    top: 21px;
+    left: 0;
+}
+.closebox {
+    border: none;
+    top: 0;
+    float: right;
+    padding: 2px 8px 2px 2px;
+}
+.minbox, .maxbox {
+    border: none;
+    top: 0;
+    float: right;
+    padding: 2px 2px 2px 2px;
+}
+#mbarleft {
+    float: left;
+}
+#mbarright {
+    float: right;
+    padding-right: 40px;
+}

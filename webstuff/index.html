@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Welcome to AAALab</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <meta name="google-signin-client_id" content="329040683457-1ibbh1bmlsahoit7sn615e5ktl7ap22g.apps.googleusercontent.com">
+        <!--<link rel="stylesheet" type="text/css" href="jspm_packages/npm/jquery-easyui@1.5.21/css/easyui.css">-->
+        <link rel="stylesheet" href="css/index.css"/>
+        <link rel="stylesheet" href="css/menu.css" />
+        <link rel="prefetch" href="images/landscapes_tardis_doctor_who_1_1920x1080_wallpaperno.com.jpg"/>
+        <script src="https://apis.google.com/js/platform.js" async defer></script>
+        <script type="text/javascript" src="jspm_packages/system.js"></script>
+        <script type="text/javascript" src="config.js"></script>
+        <script type="text/javascript">
+            SystemJS.config({
+                meta: {
+                    'target/scala-2.12/fsdesktop-opt': {
+                        format: 'global',
+                        exports: 'FSDesktop',
+                        deps: ['jquery']
+                    }
+                }
+            });
+            SystemJS.import('target/scala-2.12/fsdesktop-opt').then(function () {
+                console.log('fsdesktop loaded');
+                FSDesktop.main();
+            });
+        </script>
+    </head>
+    <body>
+
+        <!--<img id="dtimage" class="hidden transparent" src="images/landscapes_tardis_doctor_who_1_1920x1080_wallpaperno.com.jpg"/>-->
+        <img id="bgimage" class="sizesmall" src="images/ohnosplash.png" width="717" height="684"/>
+        <div id="playground"></div>
+        <div id="desktop" class="dthide"></div>
+    </body>
+</html>

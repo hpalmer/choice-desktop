@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+    <link rel="stylesheet" href="core/jquery/jQuery-File-Upload/9.5.7/css/jquery.fileupload.css">
+    <link rel="stylesheet" type="text/css" href="jspm_packages/npm/jquery-easyui@1.5.21/css/easyui.css">
+    <!--<link rel="stylesheet" type="text/css" href="jspm_packages/npm/jquery-easyui@1.5.21/themes/icon.css">-->
+    <script type="text/javascript" src="core/require.min.js"></script>
+</head>
+<body>
+    <div>
+        <p><b>Upload files to this server folder:</b></p>
+    </div>
+    <div>
+        <input id="todir" type="text" name="todir" size="70"/>
+        <a id="browse" href="#">Browse...</a>
+    </div>
+    <div>
+        <label for="replace"><b>Replace existing files:</b></label>
+        <select id="replace" name="replace">
+            <option value="always">Always</option>
+            <option value="older" selected>Only if older</option>
+            <option value="never">Never</option>
+        </select>
+    </div>
+    <div>
+        <label for="unpack"><b>Unpack jar/zip file:</b></label>
+        <input type="checkbox" id="unpack" name="unpack"/>
+    </div>
+    <input id="fileupload" type="file" name="files[]" accept="*" multiple style="display:none;"/>
+    <div style="padding:5px 0;">
+        <a id="add" href="#">Add files</a>
+        <a id="reset" href="#" style="margin-left:20px;">Reset</a>
+    </div>
+    <table id="files"></table>
+    <div style="padding:5px 0;">
+        <a id="submit" href="#">Upload</a>
+    </div>
+    <div id="result"></div>
+    <script>
+        define('process', [], function() {});
+        requirejs.config({
+            paths: {
+                jquery: 'jspm_packages/npm/jquery@3.3.1/dist/jquery.min',
+                easyui: 'jspm_packages/npm/jquery-easyui@1.5.21/js',
+                fileupload: 'core/jquery/jQuery-File-Upload/9.5.7/js',
+                'jquery.ui.widget': 'core/jquery/jQuery-File-Upload/9.5.7/js/vendor/jquery.ui.widget',
+                // tmpl: root + 'library/JavaScript-Templates/2.5.3/js/tmpl',
+                // 'load-image-meta': root + 'library/JavaScript-Load-Image/1.11.1/js/load-image-meta',
+                // 'load-image-exif': root + 'library/JavaScript-Load-Image/1.11.1/js/load-image-exif',
+                // 'load-image-ios': root + 'library/JavaScript-Load-Image/1.11.1/js/load-image-ios',
+                // 'load-image': root + 'library/JavaScript-Load-Image/1.11.1/js/load-image',
+                // 'canvas-to-blob': root + 'library/JavaScript-Canvas-to-Blob/2.1.0/js/canvas-to-blob',
+                // fsdesktop: 'js',
+                // core: root + 'scripts'
+            },
+            shim: {
+                'core/choice-session': {
+                    deps: ['jquery']
+                },
+                'easyui/jquery.easyui.min': {
+                    deps: ['jquery', 'process']
+                }
+            }
+        });
+        require(['jquery', 'core/choice-session', 'js/upload'], function(jq, ses, Uploader) {
+            // fswinlib relies on choice-session being ready
+            $.session('onReady', function() {
+                console.log('upload loaded');
+                var upload = new Uploader();
+            });
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+    <style type="text/gss">
+        [wwidth] == ::window[width] !require;
+        [wheight] == ::window[height] !require;
+        [wleft] == 0 !require;
+        [tgap] == 4;
+
+        .hsection {
+            width: == ::window[width] !require;
+        }
+
+        #top {
+            width: == .hsection[width] - 2*[tgap];
+            top: == 16;
+            left: == [wleft] + [tgap];
+            height: == 32;
+        }
+        .arrows {
+            left: == ::parent[left];
+            width: == 80;
+
+        }
+        .toptext {
+            top: == 20;
+            height: == 24;
+        }
+        #search {
+            width: == 80;
+            left: == ::parent[right] - #search[width];
+        }
+        #cbox {
+            left: == ::parent[left] + .arrows[width] + [tgap];
+            width: == ::parent[width] - #search[width] - .arrows[width] - 2*[tgap];
+
+        }
+        #middle {
+            left: == [wleft];
+            top: == #top[top] + #top[height] + 16;
+            height: == [wheight] - #top[height] - #bottom[height] - 32;
+        }
+        #bottom {
+            left: == [wleft];
+            height: == 32;
+            top: == [wheight] - #bottom[height];
+        }
+        .textbox-prompt {
+            padding-top: == 4;
+            padding-bottom: == 4;
+        }
+    </style>

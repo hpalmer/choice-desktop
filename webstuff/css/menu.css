@@ -1,0 +1,55 @@
+.menubar {
+    background-color: lightcyan;
+    width: 100%;
+    margin: 0;
+    padding: 4px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 50000;
+    transition: opacity 5s ease-in-out 1s;
+    -webkit-transition: opacity 5s ease-in-out 1s;
+    -moz-transition: opacity 5s ease-in-out 1s;
+    -o-transition: opacity 5s ease-in-out 1s;
+}
+.menutop {
+    font-weight: bold;
+    font-size: 12pt;
+    float: left;
+}
+.menutop:hover {
+    background-color: cyan;
+}
+.menutop:hover .menulist, .menulist:focus-within, .menulist:hover {
+    visibility: visible;
+}
+.menutop li:hover {
+    background-color: cyan;
+    cursor: pointer;
+}
+.menutitle {
+    display: inline;
+    margin-left: 10px;
+}
+.menuarrow {
+    background: url("../images/arrows-black.png") 0 0;
+    top: 5px;
+    width: 7px;
+    height: 10px;
+    position: relative;
+    display: inline-block;
+    margin-left: 2px;
+    margin-right: 10px;
+}
+.menulist {
+    list-style: none;
+    display: block;
+    position: absolute;
+    margin: 0;
+    padding: 0;
+    background-color: lightcyan;
+    visibility: hidden;
+}
+.menulist li {
+    padding: 4px 10px;
+}

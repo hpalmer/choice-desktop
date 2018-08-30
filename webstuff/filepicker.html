@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Choose a file</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <script type="text/javascript" src="core/zebkit/zebkit.js"></script>
+    <script type="text/javascript" src="jspm_packages/system.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            zebkit.ui.config('theme', 'light');
+            SystemJS.config({
+                meta: {
+                    'core/choice-session': {
+                        format: 'amd',
+                        deps: ['jquery']
+                    },
+                    'core/fileops': {
+                        format: 'amd',
+                        deps: ['core/choice-session']
+                    },
+                    'core/groups': {
+                        format: 'amd',
+                        deps: ['core/choice-session']
+                    },
+                    'core/ifmessage': {
+                        format: 'amd',
+                        deps: ['jquery']
+                    },
+                    'core/table': {
+                        format: 'global',
+                        exports: 'Table'
+                    },
+                    'js/filepicker': {
+                        format: 'esm',
+                        deps: [
+                            'core/choice-session',
+                            'core/fileops',
+                            'js/fswinlib'
+                        ]
+                    }
+                }
+            });
+            SystemJS.import('js/filepicker').then(function (filepicker) {
+                var FilePicker = filepicker.default;
+                $.session('onReady', function(sinfo) {
+                    var fpicker = new FilePicker(sinfo);
+                });
+            }).catch(function (error) {
+                console.log(error);
+            });
+        });
+    </script>
+</head>
+<body>
+    <canvas id="mycanvas" style="overflow: hidden;"></canvas>
+</body>
+</html>

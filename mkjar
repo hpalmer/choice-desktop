@@ -1,0 +1,6 @@
+#!/bin/bash
+WEBFILES=`cd webstuff; echo *.html config.js package.json core css images jspm_packages js terminal/index.html terminal/scripts`
+SCALAJSFILES=`cd scalajs/fsdesktop; echo target/scala-2.*/*.{js,map}`
+WEBFILES="-C webstuff ${WEBFILES// / -C webstuff }"
+SCALAJSFILES="-C scalajs/fsdesktop ${SCALAJSFILES// / -C scalajs/fsdesktop }"
+jar cf fsdesktop.jar $WEBFILES $SCALAJSFILES

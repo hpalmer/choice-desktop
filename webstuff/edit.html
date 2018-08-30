@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Editor</title>
+    <link rel="stylesheet" type="text/css" href="css/reset.css">
+    <style type="text/css">
+        html {
+            overflow: hidden;
+        }
+    </style>
+    <script type="text/javascript" src="core/zebkit/zebkit.js"></script>
+    <script type="text/javascript" src="jspm_packages/system.js"></script>
+    <script type="text/javascript" src="config.js"></script>
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', function() {
+            zebkit.ui.config('theme', 'light');
+            SystemJS.config({
+                meta: {
+                    'core/choice-session': {
+                        format: 'amd',
+                        deps: ['jquery']
+                    },
+                    'core/fileops': {
+                        format: 'amd',
+                        deps: ['core/choice-session']
+                    },
+                    'core/groups': {
+                        format: 'amd',
+                        deps: ['core/choice-session']
+                    },
+                    'core/ifmessage': {
+                        format: 'amd',
+                        deps: ['jquery']
+                    },
+                    'core/table': {
+                        format: 'global',
+                        exports: 'Table'
+                    },
+                    'ace/ace': {
+                        format: 'global',
+                        exports: 'ace'
+                    },
+                    'ace/ext-modelist': {
+                        format: 'global',
+                        deps: ['ace/ace']
+                    },
+                    'ace/ext-settings_menu': {
+                        format: 'global',
+                        deps: ['ace/ace']
+                    },
+                    'ace/theme-twilight': {
+                        format: 'global',
+                        deps: ['ace/ace']
+                    },
+                    'js/edit': {
+                        format: 'esm',
+                        deps: [
+                            'core/choice-session',
+                            'core/fileops',
+                            'js/fswinlib',
+                            'ace/ace',
+                            'ace/ext-modelist',
+                            'ace/ext-settings_menu',
+                            'ace/theme-twilight'
+                        ]
+                    }
+                }
+            });
+            SystemJS.import('js/edit').then(function (edit) {
+                var FSEditor = edit.default;
+                $.session('onReady', function(sinfo) {
+                    var edit = new FSEditor(sinfo);
+                });
+            }).catch(function (error) {
+                console.log(error);
+            });
+        });
+    </script>
+</head>
+<body>
+    <div style="position: relative;width:100%;height:100%;">
+        <canvas id="mycanvas" style="position:absolute;overflow: hidden;"></canvas>
+        <div id="editor" style="position: absolute;top:39px;overflow: hidden;width:100%;height:100%;"></div>
+    </div>
+</body>
+</html>

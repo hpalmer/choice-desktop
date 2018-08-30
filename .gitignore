@@ -1,0 +1,8 @@
+target/
+.cache
+.classpath
+.project
+.settings/
+.idea/**
+webstuff/.idea/**
+scalajs/.idea/**
