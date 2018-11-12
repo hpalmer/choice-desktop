@@ -34,8 +34,8 @@ System.config({
       "core/choice-session.js",
       "core/fileops.js",
       "core/jquery/jquery.tmpl.js",
-      "npm:jquery.terminal@1.21.0.js",
-      "npm:jquery.terminal@1.21.0/js/jquery.terminal.js",
+      "npm:jquery.terminal@1.22.1.js",
+      "npm:jquery.terminal@1.22.1/js/jquery.terminal.js",
       "github:jspm/nodelibs-process@0.1.2.js",
       "github:jspm/nodelibs-process@0.1.2/index.js",
       "npm:process@0.11.10.js",
@@ -49,8 +49,8 @@ System.config({
       "npm:clone@1.0.4/clone.js",
       "github:jspm/nodelibs-buffer@0.1.1.js",
       "github:jspm/nodelibs-buffer@0.1.1/index.js",
-      "npm:buffer@5.2.0.js",
-      "npm:buffer@5.2.0/index.js",
+      "npm:buffer@5.2.1.js",
+      "npm:buffer@5.2.1/index.js",
       "npm:ieee754@1.1.12.js",
       "npm:ieee754@1.1.12/index.js",
       "npm:base64-js@1.3.0.js",
@@ -110,7 +110,7 @@ System.config({
     "jquery-easyui": "npm:jquery-easyui@1.5.21",
     "jquery-mousewheel": "npm:jquery-mousewheel@3.1.13",
     "jquery-ui": "github:components/jqueryui@1.12.1",
-    "jquery.terminal": "npm:jquery.terminal@1.21.0",
+    "jquery.terminal": "npm:jquery.terminal@1.22.1",
     "newlogging": "/fschoice/newlogging/scripts",
     "github:components/jqueryui@1.12.1": {
       "jquery": "npm:jquery@3.3.1"
@@ -119,7 +119,7 @@ System.config({
       "assert": "npm:assert@1.4.1"
     },
     "github:jspm/nodelibs-buffer@0.1.1": {
-      "buffer": "npm:buffer@5.2.0"
+      "buffer": "npm:buffer@5.2.1"
     },
     "github:jspm/nodelibs-path@0.1.0": {
       "path-browserify": "npm:path-browserify@0.0.0"
@@ -142,7 +142,7 @@ System.config({
     "npm:babel-runtime@5.8.38": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:buffer@5.2.0": {
+    "npm:buffer@5.2.1": {
       "base64-js": "npm:base64-js@1.3.0",
       "ieee754": "npm:ieee754@1.1.12"
     },
@@ -193,10 +193,8 @@ System.config({
     "npm:jquery-easyui@1.5.21": {
       "process": "github:jspm/nodelibs-process@0.1.2"
     },
-    "npm:jquery-mousewheel@3.1.13": {
-      "jquery": "npm:jquery@3.3.1"
-    },
-    "npm:jquery.terminal@1.21.0": {
+    "npm:jquery.terminal@1.22.1": {
+      "@types/jquery": "npm:@types/jquery@3.3.6",
       "jquery": "npm:jquery@3.3.1",
       "prismjs": "npm:prismjs@1.15.0",
       "process": "github:jspm/nodelibs-process@0.1.2",

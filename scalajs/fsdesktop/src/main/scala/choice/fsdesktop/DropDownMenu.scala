@@ -24,6 +24,7 @@ import org.scalajs.dom.html.Div
 import org.scalajs.dom.raw.{Event, HTMLElement}
 import scalatags.JsDom.all._
 
+import scala.annotation.tailrec
 import scala.scalajs.js
 
 class DropDownMenu(heading : String, menuId : Option[String]) {
@@ -49,6 +50,20 @@ class DropDownMenu(heading : String, menuId : Option[String]) {
     def addItems(items : Seq[(String, String)]) : DropDownMenu = {
         val addTuple = (addItem _).tupled
         items foreach { pair ⇒ addTuple(pair) }
+        this
+    }
+
+    def clearItems : DropDownMenu = {
+        val listElement = menu.querySelector(".menulist")
+        @tailrec
+        def helper() : Unit = {
+            val lastChild = listElement.lastChild
+            if (lastChild != null) {
+                listElement.removeChild(lastChild)
+                helper()
+            }
+        }
+        helper()
         this
     }
 

@@ -52,24 +52,9 @@ object FSDesktop {
         FSWinlib.listen("winmgr")
         FSWinlib.receiveRequest("winmgr").foreach(handleWMgrRequest)
         val username = sessionInfo.username
-        val isStanford_primary = sessionInfo.isMemberOf("/System/Users/Stanford_primary")
-        val isTeacherAdmin = sessionInfo.isMemberOf("/schools/Admin")
         val menubar = new MenuBar(Some("menubar"))
-        val toolsItems = List(
-            ("browseBtn", "Browse"),
-            ("editBtn", "Edit"),
-            ("uploadBtn", "Upload"),
-            ("termBtn", "Terminal"),
-            ("playbackBtn", "Playback"),
-            ("observerBtn", "Observer"),
-            ("teacherBtn", "Teacher Tools")
-        ) filter {
-            case ("playbackBtn", _) ⇒ isStanford_primary
-            case ("observerBtn", _) ⇒ isStanford_primary
-            case ("teacherBtn", _) ⇒ isTeacherAdmin
-            case _ ⇒ true
-        }
-        toolsMenu = new DropDownMenu("Tools", Some("mbarleft")).addItems(toolsItems)
+        toolsMenu = new DropDownMenu("Tools", Some("mbarleft"))
+        setToolItems()
         rightMenu = new DropDownMenu(username, Some("mbarright")).addItems(List(("logoutBtn", "Logout")))
         menubar.addClass("dthide").addMenu(toolsMenu).addMenu(rightMenu)
         val desktopElement = document.querySelector("#desktop")
@@ -81,6 +66,29 @@ object FSDesktop {
 
     def setUsername(username : String) : Unit = {
         Try { rightMenu.setHeading(username) }
+    }
+
+    def setToolItems() : Unit = {
+        UserOps.getSession.foreach { sessionInfo ⇒
+            val isStanford_primary = sessionInfo.isMemberOf("/System/Users/Stanford_primary")
+            val isTeacherAdmin = sessionInfo.isMemberOf("/schools/Admin")
+            toolsMenu.clearItems
+            val toolsItems = List(
+                ("browseBtn", "Browse"),
+                ("editBtn", "Edit"),
+                ("uploadBtn", "Upload"),
+                ("termBtn", "Terminal"),
+                ("playbackBtn", "Playback"),
+                ("observerBtn", "Observer"),
+                ("teacherBtn", "Teacher Tools")
+            ) filter {
+                case ("playbackBtn", _) ⇒ isStanford_primary
+                case ("observerBtn", _) ⇒ isStanford_primary
+                case ("teacherBtn", _) ⇒ isTeacherAdmin
+                case _ ⇒ true
+            }
+            toolsMenu.addItems(toolsItems)
+        }
     }
 
     def showDesktop() : Unit = {
@@ -139,7 +147,7 @@ object FSDesktop {
             case "playbackBtn" ⇒
                 FSWindow(myChildUrl("playback.html"),
                          Some(WindowOptions.defaultOptions.copy(title = "Playback Tool", width = 680, height = 400)))
-            case "observeBtn" ⇒
+            case "observerBtn" ⇒
                 FSWindow(myChildUrl(UserOps.getContextRoot("observer/index.html")),
                          Some(WindowOptions.defaultOptions.copy(title = "Choicelet Observer")))
             case "teacherBtn" ⇒

@@ -113,6 +113,7 @@ object Index {
         _username = Some(username)
         _group = group
         _username.foreach(FSDesktop.setUsername)
+        FSDesktop.setToolItems()
         FSDesktop.showDesktop()
         $("#bgimage").addClass("sizelarge").on(transitionEnd, null, null, desktopLoaded _)
     }
@@ -235,7 +236,9 @@ object Index {
                 case _ ⇒
                     val auth2 = gapi.auth2.getAuthInstance()
                     val signOutPromise =
-                        if (auth2.isSignedIn.get.asInstanceOf[Boolean]) auth2.signOut().asInstanceOf[js.Promise[js.Dynamic]]
+                        if (auth2.isSignedIn.get().asInstanceOf[Boolean]) {
+                            auth2.signOut().asInstanceOf[js.Promise[js.Dynamic]]
+                        }
                         else js.Promise.resolve[js.Dynamic](auth2)
                     signOutPromise.toFuture
             }
