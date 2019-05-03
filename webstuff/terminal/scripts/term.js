@@ -21,6 +21,7 @@
  */
 import $ from 'jquery';
 import terminalExports from 'jquery.terminal';
+import lessExports from '../../jspm_packages/npm/jquery.terminal@2.4.1/js/less';
 import 'core/jquery/jquery.tmpl';
 import 'core/choice-session';
 import 'core/fileops';
@@ -35,44 +36,46 @@ class CommandLineInterpreter {
     constructor() {
         this.FSWinlib = new FSWinlib();
         terminalExports(window, $);
+        lessExports(window, $);
         this.utableId = 0;
+        this.pagingFunction = undefined;
+        this.pagerEnabled = true;
         this.cwd = '/';
         this.dirstack = [];
         this.initCommands();
         this.termdiv = $('#term');
         this.termPrompt = location.hostname.split('.')[0] + '> ';
-        this.myterm = this.termdiv.terminal($.proxy(function (command, term) {
+        this.myterm = this.termdiv.terminal((command, term) => {
             this.myterm = term;
             this.parseCommand(command);
-        }, this), {
+        }, {
             greetings: "Welcome to Choice Project Administration",
             prompt: this.termPrompt,
             clear: false,
             exit: false,
             convertLinks: false,
             title: "Choice Project Administration",
-            onExit: $.proxy(this.exit, this),
-            keydown: $.proxy(this.keyHandler, this),
-            keypress: $.proxy(this.pager, this),
-            completion: $.proxy(this.completion, this)
+            onExit: () => this.exit(),
+            keydown: (event, term) => this.keyHandler(event, term),
+            keypress: (event, term) => this.handlePaging(event, term),
+            completion: (s, callback) => this.completion(s, callback)
         });
+        this.termdiv.less();
         const resizer = $('.resizer');
         if (resizer[0]) {
             console.warn('found resizer in terminal...removing it');
             resizer.remove();
         }
         // This is a nasty hack to keep TAB from tabbing to the close box on the dialog
-        this.termdiv.on('keydown.gmgt', $.proxy(function (e) {
+        this.termdiv.on('keydown.gmgt', (e) => {
             if (e.which === 9) {
                 // Forward the event to where the terminal cmd plugin is listening
                 $(document.documentElement || window).trigger(e);
                 // And stop it from propagating further
                 e.stopPropagation();
             }
-        }, this));
+        });
     }
-
-
 
     keyHandler(event, term) {
         // Map Ctrl-space to TAB
@@ -83,7 +86,7 @@ class CommandLineInterpreter {
     }
 
 
-    pager(event, term) {
+    handlePaging(event, term) {
         if (this.pagingFunction !== undefined) {
             return this.pagingFunction(event, term);
         }
@@ -155,7 +158,7 @@ class CommandLineInterpreter {
                     arg = cmd.argdefs[iarg];
                     const noise = arg.noise || arg.name;
                     if (noise) {
-                        this.myterm.insert('(' + noise + ') ');
+                        this.myterm.insert(`(${noise}) `);
                         console.log(this.myterm.get_command());
                     }
                 }
@@ -166,7 +169,7 @@ class CommandLineInterpreter {
                         let container;
                         if (arg.isContainer()) container = true;
                         const jqxhr = $.file('doFileOp', {op: 'fcmp', path: path, container: container}, {context: this});
-                        jqxhr.done(function (result) {
+                        jqxhr.done((result) => {
                             if (result && result.status && (result.status > 0)) {
                                 if (result.matches && (result.matches.length > 0)) {
                                     const n = s.lastIndexOf('/');
@@ -216,7 +219,7 @@ class CommandLineInterpreter {
         if (dir == null) {
             const user = $.session('getUser');
             if (user && user.name) {
-                dir = '/home/' + user.name;
+                dir = `/home/${user.name}`;
             }
             else dir = '/';
         }
@@ -224,7 +227,7 @@ class CommandLineInterpreter {
             dir = this.fullPath(this.cwd, dir);
         }
         const jqxhr = $.file('lookup', {path: dir}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result && result.status && (result.status < 0)) {
                 if (pushflag) {
                     this.cwd = this.dirstack.pop();
@@ -235,7 +238,7 @@ class CommandLineInterpreter {
                 this.cwd = result.path;
             }
             else {
-                this.myterm.error(result.path + ' is not a container.');
+                this.myterm.error(`${result.path} is not a container.`);
                 if (pushflag) this.cwd = this.dirstack.pop();
             }
         });
@@ -264,7 +267,7 @@ class CommandLineInterpreter {
     initCommands() {
         console.log('initCommands', get_command_table);
         this.commands = get_command_table(this);
-        this.commands.sort(function (cmda, cmdb) {
+        this.commands.sort((cmda, cmdb) => {
             return cmda.command.localeCompare(cmdb.command);
         });
     }
@@ -313,7 +316,7 @@ class CommandLineInterpreter {
             for (const cmd of this.commands) {
                 // If there is a help argument, filter commands that start with that string
                 if (!helparg || cmd.command.lastIndexOf(helparg, 0) === 0) {
-                    this.myterm.echo('    ' + CommandLineInterpreter.makeHelpString(cmd));
+                    this.myterm.echo(`    ${CommandLineInterpreter.makeHelpString(cmd)}`);
                 }
             }
             for (const helpLine of help) {
@@ -332,20 +335,20 @@ class CommandLineInterpreter {
 
     create() {
         const jqxhr = $.group('create', this.args.group, this.args.description);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result && result.status && (result.status < 0)) {
                 this.showError(result);
             }
             else {
-                this.myterm.echo('Group ' + this.args.group + ' created.')
+                this.myterm.echo(`Group ${this.args.group} created.`)
             }
-        }, this));
+        });
         this.setFail(jqxhr);
     }
 
     groups(recurse) {
         const jqxhr = $.group('lsgroups', this.args.group, recurse);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             const groups = result.groups;
             if (result && result.status && (result.status < 0)) {
                 this.showError(result);
@@ -359,7 +362,7 @@ class CommandLineInterpreter {
                     groups: groups
                 }).html(), {raw: true});
             }
-        }, this));
+        });
         this.setFail(jqxhr);
         this.clearcmd = false;
     }
@@ -378,7 +381,7 @@ class CommandLineInterpreter {
         ];
         const attrs = [];
 
-        function helper() {
+        const helper = () => {
             const utableId = ++this.utableId;
             const tableId = 'utable' + utableId;
             const linkId = 'utlink' + utableId;
@@ -392,56 +395,56 @@ class CommandLineInterpreter {
             }
             this.myterm.echo($('#cmdListUsers').tmpl({
                 tableId: tableId,
-                hdr: 'Users in',
+                hdr,
                 gname: gname,
                 fields: fields,
                 attrs: attrs,
                 users: users
             }).html(), {raw: true});
-            this.myterm.echo('<div><a href="#" id="' + linkId + '" class="utcsv">Download as .csv</a></div>',
+            this.myterm.echo(`<div><a href="#" id="${linkId}" class="utcsv">Download as .csv</a></div>`,
                 {raw: true});
             // The terminal output above does not show up in the DOM immediately. It's also
             // possible that the terminal removes and adds DOM elements as the terminal scrolls.
             // So we use a delegated event handler.
-            this.termdiv.on('click.gmgt', '#' + linkId, $.proxy(function (event) {
+            this.termdiv.on('click.gmgt', `#${linkId}`, (event) => {
                 const linkelem = $(event.target);
-                console.log('click handler sees element id ' + linkelem.attr('id'));
+                console.log(`click handler sees element id ${linkelem.attr('id')}`);
                 if (linkelem.attr('href') !== '#') {
                     // This should be the case where the promise.done function below
                     // has clicked the link programmatically.
-                    console.log('ignoring utcsv link click: ' + linkelem.attr('href'));
+                    console.log(`ignoring utcsv link click: ${linkelem.attr('href')}`);
                     // Because there may be multiple tables in the terminal window, all
                     // using the same .csv filename on the server, each time the user
                     // clicks the link, re-generate the server data file.
-                    setTimeout(function () {
+                    setTimeout(() => {
                         linkelem.attr('href', '#');
                     }, 1000);
                     return;
                 }
                 const promise = this.tableToCsv($('#' + tableId));
-                promise.done(function (tocsv) {
+                promise.done((tocsv) => {
                     if (tocsv.status > 0) {
-                        const path = tocsv.path + '/' + tocsv.name;
-                        linkelem.attr('href', $.session('getContextRoot', path + '?api=file'));
+                        const path = `${tocsv.path}/${tocsv.name}`;
+                        linkelem.attr('href', $.session('getContextRoot', `${path}?api=file`));
                         linkelem[0].click();
                     }
                 });
                 event.preventDefault();
                 event.stopImmediatePropagation();
-            }, this));
-        }
+            });
+        };
 
-        this.getUserAttrs(0, users, attrs).done($.proxy(helper, this));
+        this.getUserAttrs(0, users, attrs).done(helper);
     }
 
     getUserAttrs(uindex, users, attrs) {
         attrs = attrs || [];
         const deferred = $.Deferred();
 
-        function helper() {
+        const helper = () => {
             if (uindex < users.length) {
                 const promise = $.file('getAttributeValues', {path: users[uindex].paths[0]});
-                promise.done(function (ga) {
+                promise.done((ga) => {
                     if (ga.status > 0) {
                         for (const attr of ga.attributes) {
                             if (attr.status > 0) {
@@ -461,16 +464,16 @@ class CommandLineInterpreter {
                 });
             }
             else deferred.resolve(attrs);
-        }
+        };
 
         helper();
         return deferred.promise();
     }
 
     tableToCsv(elem) {
-        function getText(elems) {
+        const getText = (elems) => {
             return elems.map((idx, elem) => $(elem).text()).toArray();
-        }
+        };
 
         const table = elem,
             hdrs = getText(table.find('th')),
@@ -486,19 +489,19 @@ class CommandLineInterpreter {
 
     users() {
         const jqxhr = $.group('lsusers', this.args.group);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status > 0)) {
                 this.listUsers(this.args.group, result.users);
             }
             else this.showError(result);
-        }, this));
+        });
         this.setFail(jqxhr);
         this.clearcmd = false;
     }
 
     allUsers() {
         const jqxhr = $.group('lsusers', this.args.group, true);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status > 0)) {
                 const users = result.users;
                 const uniqueUsers = [];
@@ -511,14 +514,14 @@ class CommandLineInterpreter {
                 }
                 this.listUsers(this.args.group, uniqueUsers, 'Users under');
             }
-        }, this));
+        });
         this.setFail(jqxhr);
         this.clearcmd = false;
     }
 
     adduser() {
         const jqxhr = $.group('addUsers', this.args.group, this.args.users);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result && result.status) {
                 this.showError(result);
                 return;
@@ -528,10 +531,10 @@ class CommandLineInterpreter {
                     this.showError(uresult);
                 }
                 else {
-                    this.myterm.echo('User ' + uresult.username + ' added');
+                    this.myterm.echo(`User ${uresult.username} added`);
                 }
             }
-        }, this));
+        });
         this.setFail(jqxhr);
     }
 
@@ -539,24 +542,22 @@ class CommandLineInterpreter {
         const ulist = $('<ul class="ulist"></ul>');
         const group = this.args.group,
               jqxhr = $.group('rmusers', group, this.args.users);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result && result.status) {
                 if (result.user) {
-                    ulist.append($('<li style="color: red;">User ' +
-                        result.user + ' not removed: ' + result.msg + '</li>'));
+                    ulist.append($(`<li style="color: red;">User ${result.user} not removed: ${result.msg}</li>`));
                 }
                 else if (result.msg) {
-                    ulist.append($('<li style="color: red;">Error: ' +
-                        result.msg + '</li>'));
+                    ulist.append($(`<li style="color: red;">Error: ${result.msg}</li>`));
                 }
                 this.myterm.echo(ulist.html(), {raw: true});
                 return;
             }
             for (const uresult of result) {
-                ulist.append($('<li>User ' + uresult.user + ' removed</li>'));
+                ulist.append($(`<li>User ${uresult.user} removed</li>`));
             }
             this.myterm.echo(ulist.html(), {raw: true});
-        }, this));
+        });
         this.setFail(jqxhr);
     }
 
@@ -567,14 +568,16 @@ class CommandLineInterpreter {
               email = this.args.email,
               regcode = this.args.regcode;
         const jqxhr = $.group('mkuser', username, password, email, regcode, group);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
-            this.myterm.echo('<p>id=' + result.id + ', username=' +
-                result.username + ', password=' + result.password + '</p>', {raw: true});
-        }, this));
+            this.myterm.echo(
+                `<p>id=${result.id}, username=${result.username}, password=${result.password}</p>`,
+                { raw: true }
+            );
+        });
         this.setFail(jqxhr);
     }
 
@@ -584,35 +587,35 @@ class CommandLineInterpreter {
               users = this.args.users,
               rename = this.args.rename;
         const jqxhr = $.group('copyUsers', dstgroup, srcgroup, users, rename);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
-            this.myterm.echo('<p>Status ' + result.status + '</p>', {raw: true});
+            this.myterm.echo(`<p>Status ${result.status}</p>`, {raw: true});
             if (result.length && (result.length > 0)) {
                 this.myterm.echo('<p>Users copied:</p>', {raw: true});
                 const elem = $('<ul></ul>');
                 for (const uentry of result) {
-                    if (uentry.status > 0) elem.append($('<li>' + uentry.user + ' - ok' + '</li>'));
-                    else elem.append($('<li style="color: red;">' + uentry.user + ' - failed: ' + uentry.msg + '</li>'));
+                    if (uentry.status > 0) elem.append($(`<li>${uentry.user} - ok</li>`));
+                    else elem.append($(`<li style="color: red;">${uentry.user} - failed: ${uentry.msg}</li>`));
                 }
                 this.myterm.echo(elem.html(), {raw: true});
             }
-        }, this));
+        });
     }
 
     gmove() {
         const dstpath = this.args.dstpath,
               srcgroup = this.args.srcgroup;
         const jqxhr = $.group('moveGroup', dstpath, srcgroup);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
             this.myterm.echo('Completed.');
-        }, this));
+        });
         this.setFail(jqxhr);
     }
 
@@ -661,26 +664,26 @@ class CommandLineInterpreter {
             return;
         }
         const jqxhr = $.group('set', group, attrs);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
             this.myterm.echo('Completed.');
-        }, this));
+        });
         this.setFail(jqxhr);
     }
 
     remgroup() {
         const group = this.args.group;
         const jqxhr = $.group('rmgroup', group);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
             this.myterm.echo('Completed.');
-        }, this));
+        });
         this.setFail(jqxhr);
     };
 
@@ -689,14 +692,20 @@ class CommandLineInterpreter {
         const group = this.args.group,
               recursive = true;
         const jqxhr = $.group('rmgroup', group, recursive);
-        jqxhr.done($.proxy(function (result) {
+        jqxhr.done((result) => {
             if (result.status && (result.status < 0)) {
                 this.showError(result);
                 return;
             }
             this.myterm.echo('Completed.');
-        }, this));
+        });
         this.setFail(jqxhr);
+    }
+
+    pager() {
+        // Toggle pagerEnabled if argument not specified.
+        this.pagerEnabled = (this.args.enable === undefined) ? !this.pagerEnabled : this.args.enable;
+        this.myterm.echo(`Output paging is ${this.pagerEnabled ? 'enabled' : 'disabled'}`);
     }
 
     static formatTime(timeval) {
@@ -718,7 +727,7 @@ class CommandLineInterpreter {
     ls() {
         const parms = {path: (this.args.path) ? this.args.path : this.cwd, folder: this.args.folder},
               jqxhr = $.file('ls', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if (obj.status && (obj.status < 0)) {
                 this.showError(obj);
                 return;
@@ -731,14 +740,17 @@ class CommandLineInterpreter {
             const self = this,
                   strobj = [];
 
-            function keypress(event, term) {
-                let key = String.fromCharCode(event.key || event.charCode || event.keyCode);
+            const keypress = (event, term) => {
+                let key = event.key;
+                if (!key) {
+                    key = String.fromCharCode(event.charCode || event.keyCode);
+                }
                 if (key === "q") {
                     self.pagingFunction = undefined;
                     self.myterm.set_prompt(self.termPrompt);
                     return false;
                 }
-                let limit = ((pos + 30) < strobj.length) ? pos + 30 : strobj.length;
+                const limit = Math.min(pos + term.rows(), strobj.length);
                 listlines(term, pos, limit);
                 if (limit >= strobj.length) {
                     self.pagingFunction = undefined;
@@ -749,9 +761,9 @@ class CommandLineInterpreter {
                 }
                 pos = limit;
                 return false;
-            }
+            };
 
-            function columnize(objs, specs) {
+            const columnize = (objs, specs) => {
                 const maxlens = {};
                 // First compute maximum length of each field, except any that are larger than
                 // any max value in specs for the field.
@@ -788,15 +800,24 @@ class CommandLineInterpreter {
                         }
                     }
                 }
-            }
+            };
 
-            function listlines(term, pos, limit) {
+            const listlines = (term, pos, limit) => {
+                let lines = [];
                 for (let j = pos; j < limit; ++j) {
                     const lineobj = strobj[j];
-                    term.echo(lineobj.name + ' ' + lineobj.folder + ' ' + lineobj.size + ' ' + lineobj.mtype + ' ' +
-                        lineobj.refcount + ' ' + lineobj.mtime + ' ' + lineobj.altid);
+                    lines.push(
+                        `${lineobj.name} ${lineobj.folder} ${lineobj.size} ${lineobj.mtype} ${lineobj.refcount} ` +
+                        `${lineobj.mtime} ${lineobj.altid}`
+                    );
                 }
-            }
+                if (this.pagerEnabled && (lines.length > term.rows())) {
+                    term.less(lines);
+                }
+                else {
+                    term.echo(lines.join('\n'));
+                }
+            };
 
             const mapped = obj.map(function (o, i) {
                 return {index: i, value: o.name.toLowerCase()};
@@ -827,14 +848,14 @@ class CommandLineInterpreter {
                 mtime: {justify: 'right', max: 36},
                 altid: {justify: 'right', max: 4}
             });
-            if (obj.length <= 30) {
-                listlines(this.myterm, 0, obj.length)
+            if (this.pagerEnabled || obj.length <= this.myterm.rows()) {
+                listlines(this.myterm, 0, obj.length);
             }
             else {
                 this.pagingFunction = keypress;
-                listlines(this.myterm, 0, 30);
+                listlines(this.myterm, 0, this.myterm.rows());
                 this.myterm.set_prompt('[[gb;black;white]  -- more --  ]');
-                pos = 30;
+                pos = this.myterm.rows();
             }
         });
         this.setFail(jqxhr);
@@ -843,7 +864,7 @@ class CommandLineInterpreter {
     mkdir() {
         const parms = {path: this.args.path, recursive: this.args.recursive},
               jqxhr = $.file('mkdir', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -857,7 +878,7 @@ class CommandLineInterpreter {
               id = Number(path),
               parms = (isNaN(id)) ? {path: path} : {id: id},
               jqxhr = $.file('lookup', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 for (const v in obj) {
                     if (obj.hasOwnProperty(v)) {
@@ -865,7 +886,7 @@ class CommandLineInterpreter {
                         switch (v) {
                             case 'crtime':
                             case 'mtime':
-                                vval = CommandLineInterpreter.formatTime(obj[v]) + ' [' + obj[v] + ']';
+                                vval = `${CommandLineInterpreter.formatTime(obj[v])} [${obj[v]}]`;
                                 break;
                             default:
                                 vval = obj[v];
@@ -884,7 +905,7 @@ class CommandLineInterpreter {
     rm() {
         const parms = {path: this.args.path, recursive: this.args.recursive},
               jqxhr = $.file('rm', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -899,7 +920,7 @@ class CommandLineInterpreter {
                 desc: this.args.desc
               },
               jqxhr = $.file('mkpolicy', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -917,15 +938,12 @@ class CommandLineInterpreter {
                 }]
             },
             jqxhr = $.file('addrole', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.length !== undefined) && (obj.length > 0)) {
-                for (var i = 0; i < obj.length; ++i) {
-                    var entry = obj[i];
-                    var ok = 'ok';
-                    if (entry.status < 1) {
-                        ok = 'failed'
-                    }
-                    this.myterm.echo('Add role ' + entry.role + ' for principal ' + entry.principal + ': ' + ok);
+                for (let i = 0; i < obj.length; ++i) {
+                    const entry = obj[i];
+                    const ok = entry.status < 1 ? 'failed' : 'ok';
+                    this.myterm.echo(`Add role ${entry.role} for principal ${entry.principal}: ${ok}`);
                     if (entry.status < 1) this.showError(entry);
                 }
                 this.myterm.echo('Completed');
@@ -945,14 +963,11 @@ class CommandLineInterpreter {
                 }]
               },
               jqxhr = $.file('rmrole', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.length !== undefined) && (obj.length > 0)) {
                 for (const entry of obj) {
-                    let ok = 'ok';
-                    if (entry.status < 1) {
-                        ok = 'failed'
-                    }
-                    this.myterm.echo('Remove role ' + entry.role + ' for principal ' + entry.principal + ': ' + ok);
+                    const ok = entry.status < 1 ? 'failed' : 'ok';
+                    this.myterm.echo(`Remove role ${entry.role} for principal ${entry.principal}: ${ok}`);
                     if (entry.status < 1) this.showError(entry);
                 }
                 this.myterm.echo('Completed');
@@ -965,17 +980,16 @@ class CommandLineInterpreter {
     lspolicy() {
         const parms = {path: this.args.path},
               jqxhr = $.file('lspolicy', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 const list = obj.list;
                 for (const entry of list) {
-                    this.myterm.echo(entry.principal + '(' + entry.principalId + ')\t' +
-                        entry.role + '(' + entry.roleId + ')');
+                    this.myterm.echo(`${entry.principal}(${entry.principalId})\t${entry.role}(${entry.roleId})`);
                     const rights = entry.rights;
                     if (rights && (rights.length > 0)) {
                         this.myterm.echo('\tAccess rights:');
                         for (const rdef of rights) {
-                            this.myterm.echo('\t\t' + rdef.name + '(' + rdef.applicability + ') - ' + rdef.description);
+                            this.myterm.echo(`\t\t${rdef.name}(${rdef.applicability}) - ${rdef.description}`);
                         }
                     }
                 }
@@ -989,13 +1003,13 @@ class CommandLineInterpreter {
     lsrole() {
         const parms = {role: this.args.role},
             jqxhr = $.file('lsrole', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 const rights = obj.rights;
                 if (rights && (rights.length > 0)) {
-                    this.myterm.echo('\tAccess rights for role ' + obj.role + '(' + obj.roleId + '):');
+                    this.myterm.echo(`\tAccess rights for role ${obj.role}(${obj.roleId}):`);
                     for (const rdef of rights) {
-                        this.myterm.echo('\t\t' + rdef.name + '(' + rdef.applicability + ') - ' + rdef.description);
+                        this.myterm.echo(`\t\t${rdef.name}(${rdef.applicability}) - ${rdef.description}`);
                     }
                 }
                 this.myterm.echo('Completed');
@@ -1012,13 +1026,13 @@ class CommandLineInterpreter {
                 rights: this.args.rights
               },
               jqxhr = $.file('mkrole', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('Role ' + obj.role + '(' + obj.roleId + ') created');
+                this.myterm.echo(`Role ${obj.role}(${obj.roleId}) created`);
                 if (obj.rights) {
                     this.myterm.echo('\tAccess rights for this role:');
                     for (const rdef of obj.rights) {
-                        this.myterm.echo('\t\t' + rdef.name + '(' + rdef.applicability + ') - ' + rdef.description);
+                        this.myterm.echo(`\t\t${rdef.name}(${rdef.applicability}) - ${rdef.description}`);
                     }
                 }
             }
@@ -1033,13 +1047,13 @@ class CommandLineInterpreter {
                 rights: this.args.rights
               },
               jqxhr = $.file('edrole', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ($.isArray(obj)) {
                 for (const entry of obj) {
                     if (entry.status >= 0) {
-                        this.myterm.echo('right ' + entry.name + ' ' + entry.result);
+                        this.myterm.echo(`right ${entry.name} ${entry.result}`);
                     }
-                    else this.myterm.error('right ' + entry.name + ': ' + entry.msg);
+                    else this.myterm.error(`right ${entry.name}: ${entry.msg}`);
                 }
             }
             else this.showError(obj);
@@ -1050,9 +1064,9 @@ class CommandLineInterpreter {
     share() {
         const parms = {policy: this.args.policy, filespec: this.args.filespec},
               jqxhr = $.file('share', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('' + obj.count + ' files shared');
+                this.myterm.echo(`${obj.count} files shared`);
             }
             else this.showError(obj);
         });
@@ -1062,9 +1076,9 @@ class CommandLineInterpreter {
     unshare() {
         const parms = {policy: this.args.policy, filespec: this.args.filespec},
               jqxhr = $.file('unshare', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('' + obj.count + ' files unshared');
+                this.myterm.echo(`${obj.count} files unshared`);
             }
             else this.showError(obj);
         });
@@ -1079,13 +1093,13 @@ class CommandLineInterpreter {
             mimetype: this.args.mimetype
         };
         if ((parms.ptype !== 'prefix') && (parms.ptype !== 'regex') && (parms.ptype !== 'globv1')) {
-            this.myterm.echo('invalid pattern type: ' + parms.ptype);
+            this.myterm.echo(`invalid pattern type: ${parms.ptype}`);
             return;
         }
         const jqxhr = $.file('pshare', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('Id of this path-based policy is ' + obj.id);
+                this.myterm.echo(`Id of this path-based policy is ${obj.id}`);
             }
             else this.showError(obj);
         });
@@ -1095,7 +1109,7 @@ class CommandLineInterpreter {
     punshare() {
         const parms = {id: this.args.id},
               jqxhr = $.file('punshare', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
                 this.myterm.echo('Completed.');
             }
@@ -1106,7 +1120,7 @@ class CommandLineInterpreter {
 
     pplist() {
         const jqxhr = $.file('pplist', {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ($.isArray(obj)) {
                 if (obj.length > 0) {
                     this.myterm.echo($('#cmdPPList').tmpl({hdr: 'Your path-based policies:', pplist: obj}).html(),
@@ -1122,9 +1136,9 @@ class CommandLineInterpreter {
     chown() {
         const parms = {path: this.args.path, owner: this.args.owner},
               jqxhr = $.file('chown', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('Changed owner of ' + obj.path + ' to ' + obj.owner);
+                this.myterm.echo(`Changed owner of ${obj.path} to ${obj.owner}`);
             }
             else this.showError(obj);
         });
@@ -1134,9 +1148,9 @@ class CommandLineInterpreter {
     setmt() {
         const parms = {path: this.args.path, mimetype: this.args.mimetype},
               jqxhr = $.file('setmt', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
-                this.myterm.echo('Set MIME type to ' + obj.mimetype + '.');
+                this.myterm.echo(`Set MIME type to ${obj.mimetype}.`);
             }
             else this.showError(obj);
         });
@@ -1146,11 +1160,11 @@ class CommandLineInterpreter {
     lsaccess() {
         const parms = {path: this.args.path},
               jqxhr = $.file('lsaccess', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
                 const paths = obj.policies;
                 if (paths && (paths.length > 0)) {
-                    this.myterm.echo('Resource-based policies currently applied to ' + this.args.path + ':');
+                    this.myterm.echo(`Resource-based policies currently applied to ${this.args.path}:`);
                     for (const path of paths) {
                         this.myterm.echo('\t' + path);
                     }
@@ -1158,14 +1172,13 @@ class CommandLineInterpreter {
                 else this.myterm.echo('No resource-based policies found for ' + this.args.path);
                 const pathPolicies = obj.pathPolicies;
                 if (pathPolicies && (pathPolicies.length > 0)) {
-                    this.myterm.echo('Path-based policies applicable to ' + this.args.path + ':');
+                    this.myterm.echo(`Path-based policies applicable to ${this.args.path}:`);
                     for (const pp of pathPolicies) {
                         const policy = pp.policy;
-                        this.myterm.echo('\t[' + pp.id + ']  ' + policy.path + '  On: ' + pp.pattern +
-                            '  By: ' + pp.principal.path);
+                        this.myterm.echo(`\t[${pp.id}]  ${policy.path}  On: ${pp.pattern}  By: ${pp.principal.path}`);
                     }
                 }
-                else this.myterm.echo('No path-based policies found for ' + this.args.path);
+                else this.myterm.echo(`No path-based policies found for ${this.args.path}`);
             }
             else this.showError(obj);
         });
@@ -1177,7 +1190,7 @@ class CommandLineInterpreter {
                 component: this.args.component
               },
               jqxhr = $.file('rdcomp', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status > 0)) {
                 const comp = obj.component,
                       routes = comp.routes,
@@ -1209,7 +1222,7 @@ class CommandLineInterpreter {
                 fentry: this.args.fentry
               },
               jqxhr = $.file('mkjar', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1223,7 +1236,7 @@ class CommandLineInterpreter {
                 libpath: this.args.libpath
               },
               jqxhr = $.file('mklib', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1241,7 +1254,7 @@ class CommandLineInterpreter {
                 path: this.args.path
               },
               jqxhr = $.file('publish', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1256,7 +1269,7 @@ class CommandLineInterpreter {
                 dstpath: this.args.dstpath
               },
               jqxhr = $.file('link', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1271,7 +1284,7 @@ class CommandLineInterpreter {
                 dstpath: this.args.dstpath
               },
               jqxhr = $.file('mv', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1286,7 +1299,7 @@ class CommandLineInterpreter {
                 output: this.args.output
               },
               jqxhr = $.file('pcomp', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.myterm.echo('Completed');
             }
@@ -1298,14 +1311,14 @@ class CommandLineInterpreter {
     dumpValidate(obj) {
         let s = '', llength = 0;
 
-        function app(t) {
+        const app = (t) => {
             llength += t.length;
             s += t;
             if ((t === ', ') && (llength > 50)) {
                 s += '\n';
                 llength = 0;
             }
-        }
+        };
 
         for (const p in obj) {
             if (obj.hasOwnProperty(p)) {
@@ -1333,7 +1346,7 @@ class CommandLineInterpreter {
 
     validate() {
         const jqxhr = $.file('validate', {}, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if ((obj.status !== undefined) && (obj.status >= 0)) {
                 this.scanValidate('Root Cache', obj.rootCache);
                 this.scanValidate('Vnode Cache', obj.vnodeCache);
@@ -1346,13 +1359,13 @@ class CommandLineInterpreter {
 
     migrate() {
         const jqxhr = $.file('doFileOp', {op: 'migrate'}, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if (obj.status !== undefined) {
                 if (obj.status < 0) this.showError(obj);
                 else {
                     this.myterm.echo(obj.msg);
                     if (obj.status === 0) {
-                        setTimeout($.proxy(this.migrate, this), 60000);
+                        setTimeout(() => this.migrate(), 60000);
                     }
                 }
             }
@@ -1367,13 +1380,13 @@ class CommandLineInterpreter {
             description: this.args.description
         };
         const jqxhr = $.file('defineAttribute', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if (obj.status >= 0) {
                 if (obj.status === 0) {
-                    this.myterm.echo('Attribute ' + this.args.path + ' already exists');
+                    this.myterm.echo(`Attribute ${this.args.path} already exists`);
                 }
                 else {
-                    this.myterm.echo('Created attribute ' + obj.path + ' with id ' + obj.id);
+                    this.myterm.echo(`Created attribute ${obj.path} with id ${obj.id}`);
                 }
             }
             else this.showError(obj);
@@ -1388,10 +1401,10 @@ class CommandLineInterpreter {
         const prefix = this.args.prefix || '';
         const prefixlen = prefix.length;
         const jqxhr = $.file('getValuesOfAttribute', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             if (obj.status >= 0) {
                 if (obj.status === 0) {
-                    this.myterm.echo('No values for attribute ' + this.args.path);
+                    this.myterm.echo(`No values for attribute ${this.args.path}`);
                 }
                 else {
                     const values = obj.values;
@@ -1406,7 +1419,7 @@ class CommandLineInterpreter {
                         }
                         if (showThis) {
                             if (v.status < 0) {
-                                this.myterm.echo(file.path + ': ' + v.msg);
+                                this.myterm.echo(`${file.path}: ${v.msg}`);
                             }
                             else {
                                 let aval = v.value.value;
@@ -1414,7 +1427,7 @@ class CommandLineInterpreter {
                                     aval = JSON.stringify(aval);
                                 }
                                 const setTime = (new Date(v.value.stime)).toLocaleString();
-                                this.myterm.echo(file.path + ': value ' + aval + ' set at ' + setTime);
+                                this.myterm.echo(`${file.path}: value ${aval} set at ${setTime}`);
                             }
                         }
                     }
@@ -1437,19 +1450,19 @@ class CommandLineInterpreter {
             path: this.args.path
         };
         const jqxhr = $.file('getValuesOfAttribute', parms, {context: this});
-        jqxhr.done(function (obj) {
+        jqxhr.done((obj) => {
             const apath = obj.path;
 
-            function helper(obj) {
+            const helper = (obj) => {
                 const jqxhr = $.file('rm', {path: apath}, {context: this});
-                jqxhr.done(function (obj) {
+                jqxhr.done((obj) => {
                     if (obj.status > 0) {
                         this.myterm.echo('Completed.');
                     }
                     else this.showError(obj);
                 });
                 this.setFail(jqxhr);
-            }
+            };
 
             if (obj.status >= 0) {
                 if (obj.status > 0) {
@@ -1457,7 +1470,7 @@ class CommandLineInterpreter {
                         const rmdef = $.Deferred(),
                               context = this;
 
-                        function rmvalue(values, index, result) {
+                        const rmvalue = (values, index, result) => {
                             if (index >= values.length) {
                                 rmdef.resolveWith(context, result);
                                 return;
@@ -1468,17 +1481,17 @@ class CommandLineInterpreter {
                                     attributes: [{name: apath, value: null}]
                                 },
                                 {context: context});
-                            jqxhr.done(function (obj) {
+                            jqxhr.done((obj) => {
                                 rmvalue(values, ++index, result && (obj.status > 0));
                             });
-                            jqxhr.fail(function () {
+                            jqxhr.fail(() => {
                                 rmdef.resolveWith(context, false);
                             });
-                        }
+                        };
 
                         const values = obj.values;
                         const p = rmdef.promise();
-                        p.done(function (ok) {
+                        p.done((ok) => {
                             if (ok) {
                                 helper.call(context, {path: apath});
                             }
@@ -1486,8 +1499,9 @@ class CommandLineInterpreter {
                         rmvalue(values, 0, true);
                     }
                     else {
-                        this.myterm.echo('Attribute ' + obj.path + ' has ' + obj.status +
-                            ' values assigned, and force not indicated.');
+                        this.myterm.echo(
+                            `Attribute ${obj.path} has ${obj.status} values assigned, and force not indicated.`
+                        );
                     }
                 }
                 else helper.call(this, obj);
@@ -1499,12 +1513,12 @@ class CommandLineInterpreter {
 
     who() {
         const jqxhr = $.file('lua', {path: '/lua/who.lua', asOwner: true, args: []}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 const activeList = result.result;
                 for (const ssum of activeList) {
-                    this.myterm.echo(ssum.userPath + ' since ' + CommandLineInterpreter.formatTime(ssum.startTime) + ' from ' +
-                        ssum.ipAddress);
+                    const startTime = CommandLineInterpreter.formatTime(ssum.startTime);
+                    this.myterm.echo(`${ssum.userPath} since ${startTime} from ${ssum.ipAddress}`);
                 }
             }
             else this.showError(result);
@@ -1519,7 +1533,7 @@ class CommandLineInterpreter {
             args.push('reset');
         }
         const jqxhr = $.file('lua', {path: '/lua/groupscript.lua', args: args}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 this.myterm.echo(result.result);
             }
@@ -1538,7 +1552,7 @@ class CommandLineInterpreter {
         args.push((this.args.interval === undefined) ? null : this.args.interval);
 
         const jqxhr = $.file('lua', {path: '/lua/livengroup.lua', args: args}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 this.myterm.echo(JSON.stringify(result.value));
             }
@@ -1557,7 +1571,7 @@ class CommandLineInterpreter {
         args.push((this.args.interval === undefined) ? null : this.args.interval);
 
         const jqxhr = $.file('lua', {path: '/lua/livengroup.lua', args: args}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 this.myterm.echo(JSON.stringify(result.value));
             }
@@ -1573,7 +1587,7 @@ class CommandLineInterpreter {
         args.push((this.args.version === undefined) ? null : this.args.version);
 
         const jqxhr = $.file('lua', {path: '/lua/livengroup.lua', args: args}, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 this.myterm.echo(JSON.stringify(result.value));
             }
@@ -1587,13 +1601,13 @@ class CommandLineInterpreter {
             path: this.args.group,
             attributes: [{name: 'UserScriptFile', value: this.args.script}]
         }, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 const attributes = result.attributes;
                 if (attributes.length === 1) {
                     const attr = attributes[0];
                     if (attr.status === 1) {
-                        this.myterm.echo('UserScriptFile set to ' + attr.value);
+                        this.myterm.echo(`UserScriptFile set to ${attr.value}`);
                         return;
                     }
                 }
@@ -1610,11 +1624,11 @@ class CommandLineInterpreter {
             what: this.args.what,
             doit: this.args.doit
         }, {context: this});
-        jqxhr.done(function (result) {
+        jqxhr.done((result) => {
             if (result.status === 1) {
                 for (const key in result) {
                     if (result.hasOwnProperty(key) && (key !== 'status')) {
-                        this.myterm.echo(key + ': ' + JSON.stringify(result[key]));
+                        this.myterm.echo(`${key}: ${JSON.stringify(result[key])}`);
                     }
                 }
             }
@@ -1649,18 +1663,18 @@ class CommandLineInterpreter {
             closed: false
         });
         // Wait for window manager response.
-        promise.done($.proxy(function (emsg) {
+        promise.done((emsg) => {
             if (emsg.status > 0) {
                 // Edit window created. Now wait for it to request options.
                 const editWindow = emsg.window;
-                optionRequest.done($.proxy(function (omsg) {
+                optionRequest.done((omsg) => {
                     if (omsg.status > 0) {
                         // Send options
                         this.FSWinlib.send(editWindow, 'options', options, 'edit');
                     }
-                }, this));
+                });
             }
-        }, this));
+        });
     }
 
     mkmailer() {
@@ -1677,7 +1691,7 @@ class CommandLineInterpreter {
             }
         };
         const promise = $.file('doFileOp', reqobj, {context: this});
-        promise.done(function (result) {
+        promise.done((result) => {
             if (result.status > 0) {
                 this.myterm.echo('Completed.');
             }
@@ -1686,7 +1700,7 @@ class CommandLineInterpreter {
     }
 
     mail() {
-        function getAddresses(line) {
+        const getAddresses = (line) => {
             const addrs = line.split(','),
                   result = [];
             for (const addr of addrs) {
@@ -1696,7 +1710,7 @@ class CommandLineInterpreter {
                 }
             }
             return result;
-        }
+        };
 
         const reqobj = {
             op: 'smtp',
@@ -1706,46 +1720,51 @@ class CommandLineInterpreter {
                 html: this.args.html || false
             }
         };
-        this.myterm.read('To: ', $.proxy(function (line) {
+        this.myterm.read('To: ', (line) => {
             reqobj.message.to = getAddresses(line);
-            this.myterm.read('CC: ', $.proxy(function (line) {
+        }).then(() => {
+            this.myterm.read('CC: ', (line) => {
                 reqobj.message.cc = getAddresses(line);
-                this.myterm.read('Bcc: ', $.proxy(function (line) {
+            }).then(() => {
+                this.myterm.read('Bcc: ', (line) => {
                     reqobj.message.bcc = getAddresses(line);
-                    this.myterm.read('Subject: ', $.proxy(function (line) {
+                }).then(() => {
+                    this.myterm.read('Subject: ', (line) => {
                         reqobj.message.subject = line;
+                    }).then(() => {
                         let msg = '';
-                        const eom = $.Deferred();
                         this.myterm.echo('Message:');
 
-                        function readMessage(that) {
-                            that.myterm.read('> ', $.proxy(function (line) {
-                                if (msg !== '') msg += '\n';
-                                if (line.trim() === '.') {
-                                    eom.resolveWith(that, [msg]);
-                                }
-                                else {
-                                    msg += line;
-                                    readMessage(that);
-                                }
-                            }, this));
-                        }
+                        const eomPromise = new Promise(resolve => {
+                            const readMessage = () => {
+                                this.myterm.read('> ', (line) => {
+                                    if (msg !== '') msg += '\n';
+                                    if (line.trim() === '.') {
+                                        resolve(msg);
+                                    }
+                                    else {
+                                        msg += line;
+                                        readMessage();
+                                    }
+                                });
+                            };
 
-                        readMessage(this);
-                        eom.done(function (msg) {
+                            readMessage();
+                        });
+                        eomPromise.then((msg) => {
                             reqobj.message.content = msg;
                             const promise = $.file('doFileOp', reqobj, {context: this});
-                            promise.done($.proxy(function (result) {
+                            promise.done((result) => {
                                 if (result.status > 0) {
                                     this.myterm.echo('Message sent.');
                                 }
                                 else this.showError(result);
-                            }, this));
+                            });
                         });
-                    }, this));
-                }, this));
-            }, this));
-        }, this));
+                    });
+                });
+            });
+        });
     }
 
     cfclear() {
@@ -1756,12 +1775,12 @@ class CommandLineInterpreter {
             resid: this.args.resid || undefined
         };
         const promise = $.file('doFileOp', reqobj, {context: this});
-        promise.done($.proxy(function (result) {
+        promise.done((result) => {
             if (result.status > 0) {
                 this.myterm.echo('Completed.');
             }
             else this.showError(result);
-        }, this));
+        });
     };
 
 
@@ -1771,24 +1790,23 @@ class CommandLineInterpreter {
             cmd: 'dump'
         };
         const promise = $.file('doFileOp', reqobj, {context: this});
-        promise.done($.proxy(function (result) {
+        promise.done((result) => {
             if (result.status > 0) {
                 const arg = this.args.what;
                 if (arg !== undefined) {
                     let resid = Number(arg);
                     if (isNaN(resid)) {
-                        resid = undefined;
                         resid = [];
-                        for (i = 0; i < result.names.length; ++i) {
+                        for (let i = 0; i < result.names.length; ++i) {
                             if (result.names[i][0] === arg) {
                                 resid.push(result.names[i][1]);
                             }
                         }
                         if (resid.length > 0) {
-                            this.myterm.echo(arg + ' maps to resource ids [' + resid.join(', ') + ']');
+                            this.myterm.echo(`${arg} maps to resource ids [${resid.join(', ')}]`);
                         }
                         else {
-                            this.myterm.echo(arg + ' is not in the cache.');
+                            this.myterm.echo(`${arg} is not in the cache.`);
                         }
                     }
                     else {
@@ -1800,33 +1818,38 @@ class CommandLineInterpreter {
                         }
                         if (idEntries.length > 0) {
                             for (let i = 0; i < idEntries.length; ++i) {
-                                obj = idEntries[i][1];
-                                this.myterm.echo(idEntries[i][0] + ' ==> { contentType: ' + obj.contentType +
-                                    ', length: ' + obj.length + ', mtime: ' + CommandLineInterpreter.formatTime(obj.mtime) + ', resid: ' +
-                                    obj.resid + ', seqnum: ' + obj.seqnum + ' }');
+                                const obj = idEntries[i][1];
+                                const mtime = CommandLineInterpreter.formatTime(obj.mtime);
+                                this.myterm.echo(
+                                    `${idEntries[i][0]} ==> { contentType: ${obj.contentType}, ` +
+                                    `length: ${obj.length}, mtime: ${mtime}, resid: ${obj.resid}, ` +
+                                    `seqnum: ${obj.seqnum} }`
+                                );
                             }
                         }
                         else {
-                            this.myterm.echo('Resource id ' + resid + ' is not in the cache.');
+                            this.myterm.echo(`Resource id ${resid} is not in the cache.`);
                         }
                     }
                 }
                 else {
                     this.myterm.echo('Name To Resource Id Entries:');
                     for (let i = 0; i < result.names.length; ++i) {
-                        this.myterm.echo(result.names[i][0] + ' ==> ' + result.names[i][1]);
+                        this.myterm.echo(`${result.names[i][0]} ==> ${result.names[i][1]}`);
                     }
                     this.myterm.echo('Resource Id To File Entries:');
                     for (let i = 0; i < result.ids.length; ++i) {
                         const obj = result.ids[i][1];
-                        this.myterm.echo(result.ids[i][0] + ' ==> { contentType: ' + obj.contentType +
-                            ', length: ' + obj.length + ', mtime: ' + CommandLineInterpreter.formatTime(obj.mtime) + ', resid: ' +
-                            obj.resid + ', seqnum: ' + obj.seqnum + ' }');
+                        const mtime = CommandLineInterpreter.formatTime(obj.mtime);
+                        this.myterm.echo(
+                            `${result.ids[i][0]} ==> { contentType: ${obj.contentType}, length: ${obj.length}, ` +
+                            `mtime: ${mtime}, resid: ${obj.resid}, seqnum: ${obj.seqnum} }`
+                        );
                     }
                 }
             }
             else this.showError(result);
-        }, this));
+        });
     }
 
     alist() {
@@ -1835,19 +1858,22 @@ class CommandLineInterpreter {
             path: this.args.path
         };
         const promise = $.file('doFileOp', reqobj, {context: this});
-        promise.then($.proxy(function (obj) {
+        promise.then((obj) => {
             if (obj.status === 1) {
                 const attributes = obj.attributes;
                 let attrIndex = 0;
-                const listAttributes = $.proxy(function () {
+                const listAttributes = () => {
                     for (const attr of attributes) {
                         if (attr.status === 1) {
                             let v = attr.value;
                             if (attr.atype === 'JSON') {
                                 v = JSON.stringify(v);
                             }
-                            this.myterm.echo(attr.name + ' ' + attr.atype + ' ' + v + ' set ' +
-                                CommandLineInterpreter.formatTime(attr.stime) + ' by ' + (attr.setterPath || attr.setter));
+
+                            const stime = CommandLineInterpreter.formatTime(attr.stime);
+                            this.myterm.echo(
+                                `${attr.name} ${attr.atype} ${v} set ${stime} by ${attr.setterPath || attr.setter}`
+                            );
                         }
                         else if (attr.name) {
                             this.myterm.echo(attr.name + ' ' + attr.msg);
@@ -1860,9 +1886,9 @@ class CommandLineInterpreter {
                         this.myterm.echo('No attributes.');
                     }
 
-                }, this);
+                };
 
-                function getSetter() {
+                const getSetter = () => {
                     if (attrIndex >= attributes.length) {
                         listAttributes();
                         return;
@@ -1870,7 +1896,7 @@ class CommandLineInterpreter {
                     const attr = attributes[attrIndex++];
                     if (attr.status === 1) {
                         const promise = $.file('lookup', {id: attr.setter});
-                        promise.then(function (lobj) {
+                        promise.then((lobj) => {
                             if (lobj.status === 1) {
                                 attr.setterPath = lobj.path;
                             }
@@ -1878,11 +1904,11 @@ class CommandLineInterpreter {
                         });
                     }
                     else getSetter();
-                }
+                };
 
                 getSetter();
             }
-        }, this));
+        });
     }
 
     aset() {
@@ -1897,7 +1923,7 @@ class CommandLineInterpreter {
             ]
         };
         const promise = $.file('setAttributeValues', reqobj, {context: this});
-        promise.then($.proxy(function (obj) {
+        promise.then((obj) => {
             if (obj.status === 1) {
                 obj = obj.attributes[0];
                 if (obj.status === 1) {
@@ -1906,7 +1932,35 @@ class CommandLineInterpreter {
                 else this.showError(obj);
             }
             else this.showError(obj);
-        }, this));
+        });
+    }
+
+    runjs() {
+        const argarray = [];
+        argarray.push(this.args.arg1);
+        argarray.push(this.args.arg2);
+        argarray.push(this.args.arg3);
+        argarray.push(this.args.arg4);
+        argarray.push(this.args.arg5);
+
+        const reqobj = {
+            path: this.args.path,
+            asOwner: this.args.asOwner,
+            args: argarray
+        };
+        if (this.args.module !== undefined) {
+            reqobj.options = { modules: this.args.module };
+        }
+        $.file('jsrun', reqobj).done((obj) => {
+            if (obj.status === 1) {
+                this.myterm.echo('Script completed successfully.');
+                this.myterm.echo(`Result: ${JSON.stringify(obj.result)}`);
+            }
+            else {
+                this.myterm.echo('Script threw an exception.');
+                this.showError(obj);
+            }
+        });
     }
 
     static tokenize(cmd) {
@@ -1986,7 +2040,7 @@ class CommandLineInterpreter {
         }
         const cmddef = this.findCommand(words[0].toString());
         if (cmddef == null) {
-            this.myterm.echo("Unknown command");
+            this.myterm.echo('Unknown command');
         }
         else {
             const args = {};
@@ -2005,14 +2059,14 @@ class CommandLineInterpreter {
         }
         if (!cmddef.argdefs) {
             if (windex < words.length) {
-                this.myterm.echo(cmddef.command + ' does not take arguments');
+                this.myterm.echo(`${cmddef.command} does not take arguments`);
                 this.argerr = true;
             }
             return argindex;
         }
         if (argindex >= cmddef.argdefs.length) {
             if (windex < words.length) {
-                this.myterm.echo(cmddef.command + ' takes only ' + cmddef.argdefs.length + ' arguments.');
+                this.myterm.echo(`${cmddef.command} takes only ${cmddef.argdefs.length} arguments.`);
                 this.argerr = true;
             }
             return argindex;
@@ -2021,7 +2075,7 @@ class CommandLineInterpreter {
         if ((windex >= words.length) ||
             ((typeof words[windex] === 'string') && ((words[windex] === '') || (words[windex] === '-')))) {
             if (argdef.options.indexOf('optional') < 0) {
-                this.myterm.echo('missing required argument ' + argdef.name + '\n');
+                this.myterm.echo(`missing required argument ${argdef.name}`);
                 this.argerr = true;
                 return argindex;
             }
@@ -2038,7 +2092,7 @@ class CommandLineInterpreter {
                 }
             }
             if (argindex >= cmddef.argdefs.length) {
-                this.myterm.echo('unknown argument ' + argname + '\n');
+                this.myterm.echo(`unknown argument ${argname}`);
                 this.argerr = true;
                 return argindex;
             }
@@ -2081,24 +2135,24 @@ class CommandLineInterpreter {
             }
         }
         else {
-            this.myterm.echo('missing ' + argdef.name + ' argument');
+            this.myterm.echo(`missing ${argdef.name} argument`);
             this.argerr = true;
         }
         return windex;
     }
 
     parseBoolean(result, argdef, words, windex) {
-        function tobool(s) {
+        const tobool = (s) => {
             if (s === 'true' || s === 'yes' || s === 'on' || s === 'enable') return true;
             if (s === 'false' || s === 'no' || s === 'off' || s === 'disable') return false;
             return undefined;
-        }
+        };
 
         if (windex < words.length) {
             result[argdef.name] = tobool(words[windex++].toString());
         }
         else {
-            this.myterm.echo('missing ' + argdef.name + ' argument');
+            this.myterm.echo(`missing ${argdef.name} argument`);
             this.argerr = true;
         }
         return windex;
@@ -2109,7 +2163,7 @@ class CommandLineInterpreter {
             const argstr = words[windex++];
             const n = Number(argstr.toString());
             if (isNaN(n)) {
-                this.myterm.echo('invalid id number: ' + argstr + '\n');
+                this.myterm.echo(`invalid id number: ${argstr}`);
                 this.argerr = true;
             }
             else {
@@ -2117,7 +2171,7 @@ class CommandLineInterpreter {
             }
         }
         else {
-            this.myterm.echo('missing ' + argdef.name + ' argument');
+            this.myterm.echo(`missing ${argdef.name} argument`);
             this.argerr = true;
         }
         return windex;
@@ -2131,19 +2185,19 @@ class CommandLineInterpreter {
                 result[argdef.name] = true;
             }
             else {
-                this.myterm.echo('unrecognized argument: ' + argstr + '\n');
+                this.myterm.echo(`unrecognized argument: ${argstr}`);
                 this.argerr = true;
             }
         }
         else {
-            this.myterm.echo('missing ' + argdef.name + ' argument');
+            this.myterm.echo(`missing ${argdef.name} argument`);
             this.argerr = true;
         }
         return windex;
     }
 
     parsePair(result, argdef, words, windex) {
-        function topair(s, result) {
+        const topair = (s, result) => {
             const p = s.split(':');
             if (p.length !== 2) {
                 return false;
@@ -2155,7 +2209,7 @@ class CommandLineInterpreter {
             }
             result[p[0]] = p[1];
             return true;
-        }
+        };
 
         if (windex < words.length) {
             const argstr = words[windex++].toString(),
@@ -2165,31 +2219,28 @@ class CommandLineInterpreter {
                 result[argdef.name] = pair;
             }
             else {
-                this.myterm.echo('invalid pair "' + argstr + '" in argument ' + argdef.name);
+                this.myterm.echo(`invalid pair "${argstr}" in argument ${argdef.name}`);
                 this.argerr = true;
             }
         }
         else {
-            this.myterm.echo('missing ' + argdef.name + ' argument');
+            this.myterm.echo(`missing ${argdef.name} argument`);
             this.argerr = true;
         }
         return windex;
     }
 
     setFail(jqxhr) {
-        jqxhr.fail($.proxy(function (xhr, status, error) {
+        jqxhr.fail((xhr, status, error) => {
             this.showError({
-                msg: 'status ' + status + ': ' + error
+                msg: `status ${status}: ${error}`
             });
-        }, this));
+        });
     }
 
     showError(result) {
-        let msg = 'unknown error';
-        if (result && result.msg) {
-            msg = result.msg;
-        }
-        this.myterm.error('Error: ' + msg);
+        const msg = result && result.msg ? result.msg : 'unknown error';
+        this.myterm.error(`Error: ${msg}`);
     }
 }
 

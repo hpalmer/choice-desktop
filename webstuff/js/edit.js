@@ -82,19 +82,23 @@ export default class FSEditor {
                 });
             });
             this.initializeDisplay();
-            setTimeout(() => {
-                this.setCanvasOnTop(false);
-                this.editor = ace.edit('editor');
-                this.editor.setTheme('ace/theme/twilight');
-                this.editor.getSession().setMode(this.mode.mode);
-                this.setEditorSize();
-                this.editor.focus();
-                kbmodes.aceBtn = this.editor.getKeyboardHandler();
-                this.editor.on("change", (delta) => {
-                    this.lmtime = Date.now();
-                    this.changed = true;
-                });
-            }, 10);
+            const waitForCanvas = () => {
+                if (this.canvas) {
+                    this.setCanvasOnTop(false);
+                    this.editor = ace.edit('editor');
+                    this.editor.setTheme('ace/theme/twilight');
+                    this.editor.getSession().setMode(this.mode.mode);
+                    this.setEditorSize();
+                    this.editor.focus();
+                    kbmodes.aceBtn = this.editor.getKeyboardHandler();
+                    this.editor.on("change", (delta) => {
+                        this.lmtime = Date.now();
+                        this.changed = true;
+                    });
+                }
+                else setTimeout(waitForCanvas, 10);
+            };
+            setTimeout(waitForCanvas, 10);
             if (this.FSWinlib.getMasterName()) {
                 this.receiveOptions();
             }

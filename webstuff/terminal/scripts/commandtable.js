@@ -217,6 +217,18 @@ export default function get_command_table(term) {
         new CommandDef('aset', 'set metadata attribute on a file',
             [new CommandArg('path', term.parseString, 'file path', 'file'),
                 new CommandArg('attr', term.parseString, 'attribute path', 'file'),
-                new CommandArg('value', term.parseString, 'attribute value', 'optional')], term.aset)
+                new CommandArg('value', term.parseString, 'attribute value', 'optional')], term.aset),
+        new CommandDef('run', 'run JavaScript file',
+            [new CommandArg('path', term.parseString, 'js file path', 'file'),
+                new CommandArg('asOwner', term.parseBoolean, 'run as file owner?', 'optional'),
+                new CommandArg('module', term.parseBoolean, 'run as module', 'optional'),
+                new CommandArg('arg1', term.parseString, 'argument 1', 'optional'),
+                new CommandArg('arg2', term.parseString, 'argument 2', 'optional'),
+                new CommandArg('arg3', term.parseString, 'argument 3', 'optional'),
+                new CommandArg('arg4', term.parseString, 'argument 4', 'optional'),
+                new CommandArg('arg5', term.parseString, 'argument 5', 'optional'),
+            ], term.runjs),
+        new CommandDef('pager', 'turn output pager on / off',
+            [new CommandArg('enable', term.parseBoolean, 'enable pager', 'optional'),], term.pager),
     ];
 }

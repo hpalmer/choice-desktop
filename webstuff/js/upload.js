@@ -131,7 +131,7 @@ define(['jquery', 'easyui/jquery.easyui.min',
         console.log('onAdd called with ' + data.files.length + ' files');
         var files = data.files;
         for (var i = 0; i < files.length; ++i) {
-            var lmtime = files[i].lastModifiedDate,
+            var lmtime = files[i].lastModifiedDate || new Date(files[i].lastModified),
                 fileObject = {
                     file: files[i],
                     todir: $('#todir').val(),
